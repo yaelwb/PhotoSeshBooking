@@ -2,33 +2,39 @@
 PhotoSeshBooking – A service for the busy photographer, to keep track of customers and bookings. 
 RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
 <ul>
+
 <li>
-Schema: conf/schema.sql - Customer, Status, Booking
+<b>Schema: </b>
+<ul>
+<li>conf/schema.sql - Customer, Status, Booking</li>
+</ul>
 </li>
-<li>
-Customer:
-model/Customer - First name, last name, email, phone, pay method, balnce
-app/controllers/CustomerController.java - create, get (all, by id, by name), update, delete
-</li>
-<li>
-Booking: TODO
-</li>
-<li>
-Utilities:
-utilities/ActionAuthenticator.java - basic authentication
-utilities/Parse.java - validate name, phone, email strings
-utilities/RequestUtil.java - get parameters from query request, paginate results
-</li>
-<li>
-Enumerates:
-Status
-PayMethod
-</li>
-<li>
-Settings:
-conf/routes
-conf/application.conf
-conf/META-INF/persistence.xml
-build.sbt
-</li>
+  <li>
+    <b>Customer:</b>
+    <ul>
+    <li>model/Customer - First name, last name, email, phone, pay method, balance</li>
+    <li>app/controllers/CustomerController.java - create, get (all, by id, by name), update, delete</li>
+    </ul>
+  </li>
+  <li>
+    <b>Booking:</b> TODO
+  </li>
+  <li>
+    <b>Utilities:</b>
+    <li>utilities/ActionAuthenticator.java - basic authentication</li>
+    <li>utilities/Parse.java - validate name, phone, email strings</li>
+    <li>utilities/RequestUtil.java - get parameters from query request, paginate results</li>
+  </li>
+  <li>
+    <b>Enumerates:</b>
+    <li>Status</li>
+    <li>PayMethod</li>
+  </li>
+  <li>
+    <b>Settings:</b>
+    <li>conf/routes</li>
+    <li>conf/application.conf</li>
+    <li>conf/META-INF/persistence.xml</li>
+    <li>build.sbt</li>
+  </li>
 </ul>

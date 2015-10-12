@@ -3,12 +3,12 @@ PhotoSeshBooking – A service for the busy photographer, to keep track of custo
 RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
 <ul>
 
-<li>
-<b>Schema: </b>
-<ul>
-<li>conf/schema.sql - Customer, Status, Booking</li>
-</ul>
-</li>
+  <li>
+    <b>Schema: </b>
+    <ul>
+    <li>conf/schema.sql - Customer, Status, Booking</li>
+    </ul>
+  </li>
   <li>
     <b>Customer:</b>
     <ul>

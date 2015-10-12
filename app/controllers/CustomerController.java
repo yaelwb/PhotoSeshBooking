@@ -131,8 +131,7 @@ public class CustomerController extends Controller {
                         .setParameter("first", first);
             } else {
                 query = JPA.em().createQuery("from Customer WHERE firstName = :first AND lastName = :last", Customer.class)
-                        .setParameter("first", first)
-                        .setParameter("last", last);
+                        .setParameter("first", first).setParameter("last", last);
             }
         } else {
             query = JPA.em().createQuery("from Customer WHERE lastName = :last", Customer.class)

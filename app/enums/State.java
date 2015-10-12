@@ -3,7 +3,7 @@ package enums;
 /**
  * Created by yael on 10/10/15.
  */
-public enum Status {
+public enum State {
     CREATED("Created"),
     BOOKED("Booked"),
     DOWNPAYMENT("DownPayment"),
@@ -18,7 +18,7 @@ public enum Status {
     POSTPONED("Postponed");
 
     private String name;
-    Status(String name) {
+    State(String name) {
         this.name = name;
     }
 

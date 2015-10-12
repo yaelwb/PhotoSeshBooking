@@ -21,20 +21,26 @@ RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
   </li>
   <li>
     <b>Utilities:</b>
+    <ul>
     <li>utilities/ActionAuthenticator.java - basic authentication</li>
     <li>utilities/Parse.java - validate name, phone, email strings</li>
     <li>utilities/RequestUtil.java - get parameters from query request, paginate results</li>
+    </ul>
   </li>
   <li>
     <b>Enumerates:</b>
+    <ul>
     <li>Status</li>
     <li>PayMethod</li>
+    </ul>
   </li>
   <li>
     <b>Settings:</b>
+    <ul>
     <li>conf/routes</li>
     <li>conf/application.conf</li>
     <li>conf/META-INF/persistence.xml</li>
     <li>build.sbt</li>
+    </ul>
   </li>
 </ul>

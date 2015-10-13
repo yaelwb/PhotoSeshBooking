@@ -23,6 +23,8 @@ public class Status {
     @Column(name="description")
     private String description;
 
+    public Status() {}
+
     public Status(String state, String description) {
         this.state = state;
         this.description = description;

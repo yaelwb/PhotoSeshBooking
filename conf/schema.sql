@@ -32,7 +32,7 @@ CREATE TABLE booking
 	equipment VARCHAR(255), 
 	camera_settings VARCHAR(255),
 	optimal_lighting_spots VARCHAR(255),
-	status_id INT NOT NULL,
+	status_id BIGINT NOT NULL,
 	num_pics INT,
 	num_selected INT,
 	num_processed INT,

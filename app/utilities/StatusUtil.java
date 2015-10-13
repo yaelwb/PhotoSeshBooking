@@ -1,6 +1,5 @@
 package utilities;
 
-import enums.State;
 import models.Status;
 import play.db.jpa.JPA;
 
@@ -11,8 +10,11 @@ import java.util.Map;
 
 /**
  * Created by yael on 10/11/15.
+ * Cache to reduce db calls, as statuses are unlikely to change
+ * Mapping from the state string to the Status or StatusId - used by models.Booking.setStatus
+ * A reverse map from StatusId to the status - used by models.Booking.getStatus
  */
-public class StatusMap {
+public class StatusUtil {
 
     private static Map<String, Status> statusMap = new HashMap<>();
     private static Map<String, Long> statusIdMap = new HashMap<>();
@@ -20,8 +22,7 @@ public class StatusMap {
 
     private static void updateMaps(String state) {
         EntityManager em = JPA.em("default");
-        Query query = em.createQuery("select status from Status where state =:state");
-        query.setParameter("state", state);
+        Query query = em.createQuery("from Status where state =:state").setParameter("state", state);
         Status status = (Status) query.getSingleResult();
         if (status != null) {
             statusMap.put(state, status);
@@ -54,4 +55,11 @@ public class StatusMap {
         return idStatusMap.get(id);
     }
 
+    public String getStatusDescription(String state) {
+        Status status = StatusUtil.getStatus(getStatusId(state));
+        if(status != null) {
+            return status.getDescription();
+        }
+        return null;
+    }
  }

@@ -7,6 +7,8 @@
         <non-jta-data-source>DefaultDS</non-jta-data-source>
 
         <class>models.Customer</class>
+        <class>models.Status</class>
+        <class>models.Booking</class>
 
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQL9Dialect"/>

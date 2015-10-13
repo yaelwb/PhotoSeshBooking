@@ -1,10 +1,8 @@
 package models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.fasterxml.jackson.databind.util.EnumValues;
 import enums.State;
-import utilities.StatusMap;
+import utilities.StatusUtil;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -14,11 +12,30 @@ import java.sql.Timestamp;
  * Created by yael on 10/11/15.
  */
 @Entity
+@Table(name = "booking")
 public class Booking {
 
-    //region customer id
+    public Booking() {}
+
+    public Booking(Long customerId) {
+        this.customerId = customerId;
+        this.statusId = StatusUtil.getStatusId(State.CREATED.toString());
+    }
+
+    @Id
+    @Column(name="id")
+    @SequenceGenerator(name="booking_id_seq",
+            sequenceName="booking_id_seq",
+            allocationSize=1)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "booking_id_seq")
+    private Long id;
+
+    //region customer
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", referencedColumnName = "id", updatable = false, insertable = false)
+    private Customer customer;
+
+    @Column(name = "customer_id")
     private Long customerId;
 
     @JsonBackReference(value = "booking-customer_id")
@@ -33,13 +50,13 @@ public class Booking {
 
     //region status
     @Column(name = "status_id", nullable = false)
-    private long statusId;
+    private Long statusId;
 
-    public long getStatusId() {
+    public Long getStatusId() {
         return statusId;
     }
 
-    public void setStatusId(long statusId) {
+    public void setStatusId(Long statusId) {
         this.statusId = statusId;
     }
 
@@ -49,27 +66,20 @@ public class Booking {
 
     public void setStatus(String status) {
         if(!status.isEmpty()) {
-            Long id = StatusMap.getStatusId(status);
+            Long id = StatusUtil.getStatusId(status);
             setStatusId(id);
         }
     }
 
     public String getStatus() {
-        Status status = StatusMap.getStatus(getStatusId());
+        Status status = StatusUtil.getStatus(getStatusId());
         if(status != null) {
             return status.getState();
         }
         return null;
     }
-
-    public String getStatusDescription() {
-        Status status = StatusMap.getStatus(getStatusId());
-        if(status != null) {
-            return status.getDescription();
-        }
-        return null;
-    }
     //endregion
+
 
     @Column(name = "event_date")
     private Timestamp eventDate;
@@ -85,7 +95,7 @@ public class Booking {
 
     @Column
     private BigDecimal price;
-    
+
     @Column(name = "key_attendees")
     private String key_attendees;
 
@@ -110,4 +120,118 @@ public class Booking {
     @Column(name = "num_processed")
     private int numProcessed;
 
+    @Override
+    public String toString() {
+        return "Booking{" +
+                "customerId=" + customerId +
+                ", status=" + status +
+                ", eventDate=" + eventDate +
+                ", location='" + location + '\'' +
+                ", eventType='" + eventType + '\'' +
+                '}';
+    }
+
+    public Timestamp getEventDate() {
+        return eventDate;
+    }
+
+    public void setEventDate(Timestamp eventDate) {
+        this.eventDate = eventDate;
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public String getEventType() {
+        return eventType;
+    }
+
+    public void setEventType(String eventType) {
+        this.eventType = eventType;
+    }
+
+    public BigDecimal getDuration() {
+        return duration;
+    }
+
+    public void setDuration(BigDecimal duration) {
+        this.duration = duration;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public String getKey_attendees() {
+        return key_attendees;
+    }
+
+    public void setKey_attendees(String key_attendees) {
+        this.key_attendees = key_attendees;
+    }
+
+    public String getRequirements() {
+        return requirements;
+    }
+
+    public void setRequirements(String requirements) {
+        this.requirements = requirements;
+    }
+
+    public String getEquipment() {
+        return equipment;
+    }
+
+    public void setEquipment(String equipment) {
+        this.equipment = equipment;
+    }
+
+    public String getCameraSettings() {
+        return cameraSettings;
+    }
+
+    public void setCameraSettings(String cameraSettings) {
+        this.cameraSettings = cameraSettings;
+    }
+
+    public String getOptimalLightingSpots() {
+        return optimalLightingSpots;
+    }
+
+    public void setOptimalLightingSpots(String optimalLightingSpots) {
+        this.optimalLightingSpots = optimalLightingSpots;
+    }
+
+    public int getNumPics() {
+        return numPics;
+    }
+
+    public void setNumPics(int numPics) {
+        this.numPics = numPics;
+    }
+
+    public int getNumSelected() {
+        return numSelected;
+    }
+
+    public void setNumSelected(int numSelected) {
+        this.numSelected = numSelected;
+    }
+
+    public int getNumProcessed() {
+        return numProcessed;
+    }
+
+    public void setNumProcessed(int numProcessed) {
+        this.numProcessed = numProcessed;
+    }
 }

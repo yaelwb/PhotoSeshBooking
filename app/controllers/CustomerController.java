@@ -1,5 +1,6 @@
 package controllers;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.inject.Inject;
 import models.Customer;
 import play.Logger;
 import play.db.jpa.JPA;
@@ -12,6 +13,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import play.mvc.Security;
+import services.CustomerService;
 import utilities.ActionAuthenticator;
 import utilities.Parse;
 import utilities.RequestUtil;
@@ -23,6 +25,13 @@ import javax.persistence.TypedQuery;
  * Created by yael on 9/28/15.
  */
 public class CustomerController extends Controller {
+
+    private final CustomerService customerService;
+
+    @Inject
+    public CustomerController(CustomerService customerService) {
+        this.customerService = customerService;
+    }
 
     /** create: Persist a new customer to the database.
      * PUT request to /customers supplying a Json representation of the new customer.

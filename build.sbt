@@ -14,12 +14,13 @@ libraryDependencies ++= Seq(
   javaJpa,
   "org.json" % "json" % "20140107",
   "org.postgresql" % "postgresql" % "9.4-1201-jdbc41",
-  "org.springframework" % "spring-context" % "4.2.1.RELEASE",
+//  "org.springframework" % "spring-context" % "4.2.1.RELEASE",
   "org.springframework.data" % "spring-data-jpa" % "1.8.2.RELEASE",
   "org.springframework" % "spring-test" % "4.2.1.RELEASE",
   "org.hibernate" % "hibernate-core" % "4.3.10.Final",
   "org.hibernate" % "hibernate-entitymanager" % "4.3.10.Final",
-  "org.apache.commons" % "commons-csv" % "1.2"
+  "org.apache.commons" % "commons-csv" % "1.2",
+  "com.google.inject" % "guice" % "4.0-beta"
 )
 
 

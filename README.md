@@ -20,8 +20,8 @@ RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
     <b>Booking:</b>
     <ul>
         <li>model/Booking: id, customer id, status id <br>
-        event's date, location, type, duration, price <br>
-        Preparation: key attendees, requirements, equipment, camera settings, optimal lighting spots <br>
+        Event: date, location, type, duration, price, key attendees <br>
+        Preparation: requirements, equipment, camera settings, optimal lighting spots <br>
         Editing: num_pics, num_selected, num_processed
         </li>
         <li>app/controllers/BookingController.java - create</li>
@@ -33,6 +33,7 @@ RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
     <li>utilities/ActionAuthenticator.java - basic authentication</li>
     <li>utilities/Parse.java - validate name, phone, email strings</li>
     <li>utilities/RequestUtil.java - get parameters from query request, paginate results</li>
+    <li>utilities/StatusUtil.java - cache for Status, state, status id - to reduce db calls</li>
     </ul>
   </li>
   <li>

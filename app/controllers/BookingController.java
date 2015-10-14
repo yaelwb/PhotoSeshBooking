@@ -10,6 +10,7 @@ import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 import play.mvc.Security;
+import services.BookingService;
 import services.CustomerService;
 import utilities.ActionAuthenticator;
 
@@ -20,11 +21,13 @@ public class BookingController extends Controller {
 
     private final CustomerService customerService;
 
-    @Inject
-    public BookingController(CustomerService customerService) {
-        this.customerService = customerService;
-    }
+    private final BookingService bookingService;
 
+    @Inject
+    public BookingController(CustomerService customerService, BookingService bookingService) {
+        this.customerService = customerService;
+        this.bookingService = bookingService;
+    }
 
     @Transactional
     @Security.Authenticated(ActionAuthenticator.class)

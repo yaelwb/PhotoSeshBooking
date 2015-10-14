@@ -14,6 +14,7 @@ RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
     <ul>
     <li>model/Customer - First name, last name, email, phone, pay method, balance</li>
     <li>app/controllers/CustomerController.java - create, get (all, by id, by name), update, delete</li>
+    <li>app/services/CustomerService.java - support for CustomerController</li>
     </ul>
   </li>
   <li>
@@ -25,6 +26,7 @@ RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
         Editing: num_pics, num_selected, num_processed
         </li>
         <li>app/controllers/BookingController.java - create</li>
+        <li>app/services/BookingService.java</li>
         </ul>
   </li>
   <li>

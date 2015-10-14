@@ -1,7 +1,7 @@
 package controllers;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import models.Customer;
+
 import play.Logger;
 import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
@@ -9,7 +9,6 @@ import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 import play.mvc.Security;
@@ -19,7 +18,6 @@ import utilities.Parse;
 import utilities.RequestUtil;
 
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 
 /**
  * Created by yael on 9/28/15.
@@ -40,36 +38,16 @@ public class CustomerController extends Controller {
     @Transactional
     @Security.Authenticated(ActionAuthenticator.class)
     public Result create() {
-        JsonNode json = request().body().asJson();
-        Customer inputCustomer = Json.fromJson(json, Customer.class);
-        if (inputCustomer.getFirstName() == null || inputCustomer.getFirstName().isEmpty() ||
-                !Parse.isNameValid(inputCustomer.getFirstName())) {
-            Logger.error("controllers.CustomerController.create(): First name missing/invalid");
-            return badRequest("A valid first name is a mandatory field.");
-        }
-        if (inputCustomer.getLastName() == null || inputCustomer.getLastName().isEmpty()||
-                !Parse.isNameValid(inputCustomer.getLastName())) {
-            Logger.error("controllers.CustomerController.create(): Last name missing/invalid");
-            return badRequest("A valid last name is a mandatory field.");
-        }
-        if (inputCustomer.getEmail() == null || inputCustomer.getEmail().isEmpty()||
-                !Parse.isEmailValid(inputCustomer.getEmail())) {
-            Logger.error("controllers.CustomerController.create(): Email missing/invalid");
-            return badRequest("A valid email is a mandatory field.");
-        }
-        if(inputCustomer.getPhone() == null || inputCustomer.getPhone().isEmpty() ||
-                !Parse.isPhoneNumberValid(inputCustomer.getPhone())) {
-            Logger.error("controllers.CustomerController.create(): Phone missing/invalid");
-            return badRequest("A valid phone is a mandatory field.");
-        }
+        Customer inputCustomer = Json.fromJson(request().body().asJson(), Customer.class);
+        String error = customerService.validate(inputCustomer);
+        if(error != null)
+            return badRequest(error);
 
-        Customer customer = new Customer(inputCustomer.getFirstName(), inputCustomer.getLastName(),
-                inputCustomer.getEmail(), inputCustomer.getPhone(),
-                inputCustomer.getPayMethod(), inputCustomer.getBalance());
+        Customer customer = customerService.create(inputCustomer);
+        if(customer == null)
+            return badRequest("Error creating a new customer");
 
-        JPA.em().persist(customer);
-        Logger.info("controllers.CustomerController.create(): Created customer " + customer.toString());
-        return ok(Json.toJson(customer.toString()));
+        return ok(Json.toJson(customer));
     }
 
     /** getAll: Show all customers in the database. Supports pagination.
@@ -79,16 +57,11 @@ public class CustomerController extends Controller {
     @Transactional
     @Security.Authenticated(ActionAuthenticator.class)
     public Result getAll() {
-        String queryString = "from Customer";
-        TypedQuery<Customer> query = JPA.em().createQuery(queryString, Customer.class);
-        RequestUtil.paginate(query);
-        List<Customer> l = query.getResultList();
+        List<Customer> l = customerService.getAll();
 
         if (l == null || l.isEmpty()) {
-            Logger.info("controllers.CustomerController.getAll(): No Customers to show");
             return ok("No customers currently in the system.");
         }
-        Logger.info("controllers.CustomerController.getAll() returned " + l.size() + " customers.");
         return ok(Json.toJson(l));
     }
 
@@ -106,16 +79,11 @@ public class CustomerController extends Controller {
             return badRequest("Please provide an id as a parameter");
         }
 
-        Query query = JPA.em().createQuery("from Customer WHERE id = :id", Customer.class).setParameter("id", id);
-        RequestUtil.paginate(query);
-        List l = query.getResultList();
-
-        if (l == null || l.isEmpty()) {
-            Logger.info("controllers.CustomerController.getById(): customer not found");
+        Customer customer = customerService.get(id);
+        if (customer == null ) {
             return ok("No such customers currently in the system.");
         }
-        Logger.info("controllers.CustomerController.getById() returned " + Json.toJson(l));
-        return ok(Json.toJson(l));
+        return ok(Json.toJson(customer));
     }
 
     /** getByName: Finds and show customers in the database by name. Supports pagination.
@@ -165,39 +133,12 @@ public class CustomerController extends Controller {
     @Transactional
     @Security.Authenticated(ActionAuthenticator.class)
     public Result update() {
-        JsonNode json = request().body().asJson();
-        Customer updatedCustomer = Json.fromJson(json, Customer.class);
-        Customer customer = JPA.em().find(Customer.class, updatedCustomer.getId());
+        Customer updatedCustomer = Json.fromJson(request().body().asJson(), Customer.class);
+        Customer customer = customerService.get(updatedCustomer.getId());
         if (customer == null) {
-            Logger.info("controllers.CustomerController.update(): customer not found");
             return ok("No such customer currently in the system.");
         }
-
-        String first = updatedCustomer.getFirstName();
-        if (first != null && Parse.isNameValid(first))
-            customer.setFirstName(first);
-
-        String last = updatedCustomer.getLastName();
-        if (last != null && Parse.isNameValid(last))
-            customer.setLastName(last);
-
-        String email = updatedCustomer.getEmail();
-        if (email != null && Parse.isEmailValid(email))
-            customer.setEmail(email);
-
-        String phone = updatedCustomer.getPhone();
-        if (phone != null && Parse.isPhoneNumberValid(phone))
-            customer.setPhone(phone);
-
-        String payMethod = updatedCustomer.getPayMethod();
-        if (payMethod != null)
-            customer.setPayMethod(payMethod);
-
-        BigDecimal balance = updatedCustomer.getBalance();
-        if (balance != null)
-            customer.setBalance(balance);
-
-        Logger.info("controllers.CustomerController.update(): Updated customer: " + customer.toString());
+        customerService.update(updatedCustomer, customer);
         return ok(Json.toJson(customer));
     }
 
@@ -214,13 +155,8 @@ public class CustomerController extends Controller {
             return badRequest("Please provide an id as a parameter");
         }
 
-        Query query = JPA.em().createQuery("DELETE Customer WHERE id =:id ").setParameter("id", id);
-        int res = query.executeUpdate();
-        if (res == 0) {
-            Logger.info("controllers.CustomerController.delete(): customer not found");
+        if (customerService.delete(id) == 0)
             return ok("No such customer currently in the system.");
-        }
-        Logger.info("controllers.CustomerController.delete(): deleted customer " + id);
         return ok("Deleted customer with id " + id);
     }
 

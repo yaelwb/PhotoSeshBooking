@@ -3,7 +3,6 @@ import com.google.inject.Inject;
 import models.Customer;
 
 import play.Logger;
-import play.db.jpa.JPA;
 import play.db.jpa.Transactional;
 import play.libs.Json;
 import play.mvc.Controller;
@@ -16,8 +15,6 @@ import services.CustomerService;
 import utilities.ActionAuthenticator;
 import utilities.Parse;
 import utilities.RequestUtil;
-
-import javax.persistence.Query;
 
 /**
  * Created by yael on 9/28/15.
@@ -33,7 +30,7 @@ public class CustomerController extends Controller {
 
     /** create: Persist a new customer to the database.
      * PUT request to /customers supplying a Json representation of the new customer.
-     * @return Result: The new customer or an error message is any field is invalid.
+     * @return Result: The new customer or an error message if any field is invalid.
      */
     @Transactional
     @Security.Authenticated(ActionAuthenticator.class)
@@ -97,32 +94,15 @@ public class CustomerController extends Controller {
         String last = RequestUtil.getQueryParam("last");
 
         if ((first == null || !Parse.isNameValid(first)) && (last == null || !Parse.isNameValid(last))) {
-            Logger.error("controllers.CustomerController.getByName(): Invalid or missing name parameters");
+            Logger.error("controllers.CustomerController.getByName(): Invalid or missing name parameters. first: "
+                    + first + ", last: " + last);
             return badRequest("Please provide a name as a parameter");
         }
 
-        Query query = null;
-        if (first != null) {
-            if (last == null) {
-                query = JPA.em().createQuery("from Customer WHERE firstName = :first", Customer.class)
-                        .setParameter("first", first);
-            } else {
-                query = JPA.em().createQuery("from Customer WHERE firstName = :first AND lastName = :last", Customer.class)
-                        .setParameter("first", first).setParameter("last", last);
-            }
-        } else {
-            query = JPA.em().createQuery("from Customer WHERE lastName = :last", Customer.class)
-                    .setParameter("last", last);
-        }
-
-        RequestUtil.paginate(query);
-        List l = query.getResultList();
-
+        List l = customerService.getByName(first, last);
         if (l == null || l.isEmpty()) {
-            Logger.info("controllers.CustomerController.getByName(): customer not found");
             return ok("No such customers currently in the system.");
         }
-        Logger.info("controllers.CustomerController.getByName() returned " + l.size() + " customers.");
         return ok(Json.toJson(l));
     }
 

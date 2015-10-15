@@ -3,19 +3,15 @@ package services;
 import models.Customer;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.criterion.Restrictions;
 import play.Logger;
 import play.db.jpa.JPA;
-import play.libs.Json;
 import utilities.Parse;
 import utilities.RequestUtil;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.math.BigDecimal;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -99,9 +95,9 @@ public class CustomerServiceImpl implements CustomerService {
         Query query = JPA.em().createQuery("DELETE Customer WHERE id =:id ").setParameter("id", id);
         int res = query.executeUpdate();
         if (res == 0)
-            Logger.info("controllers.CustomerController.delete(): customer not found");
+            Logger.info("services.CustomerService.delete(): customer not found");
         else
-            Logger.info("controllers.CustomerController.delete(): deleted customer " + id);
+            Logger.info("services.CustomerService.delete(): deleted customer " + id);
         return res;
     }
 
@@ -113,9 +109,9 @@ public class CustomerServiceImpl implements CustomerService {
         List<Customer> l = query.getResultList();
 
         if (l == null || l.isEmpty())
-            Logger.info("controllers.CustomerController.getAll(): No Customers to show");
+            Logger.info("services.CustomerService.getAll(): No Customers to show");
         else
-            Logger.info("controllers.CustomerController.getAll() returned " + l.size() + " customers.");
+            Logger.info("services.CustomerService.getAll(): returned " + l.size() + " customers.");
         return l;
     }
 
@@ -123,20 +119,26 @@ public class CustomerServiceImpl implements CustomerService {
     public Customer get(Long id) {
         Customer customer = JPA.em().find(Customer.class, id);
         if (customer == null)
-            Logger.info("services.CustomerService.update(): customer not found");
+            Logger.info("services.CustomerService.get(): customer not found");
         else
-            Logger.info("controllers.CustomerController.getById() returned " + customer.toString());
+            Logger.info("services.CustomerService.get(): returned " + customer.toString());
         return customer;
     }
 
     @Override
     public List<Customer> getByName(String first, String last) {
-
-        //Criteria cr = session.createCriteria(Customer.class);
-        //cr.add(Restrictions.eq("firstName", first));
-        //List results = cr.list();
-        //return results;
-        return null;
+        Session session = JPA.em().unwrap(Session.class);
+        Criteria cr = session.createCriteria(Customer.class);
+        if(first != null)
+            cr.add(Restrictions.eq("firstName", first));
+        if(last != null)
+            cr.add(Restrictions.eq("lastName", last));
+        List<Customer> results = cr.list();
+        if(results.isEmpty())
+            Logger.info("services.CustomerService.getByName(): customer not found");
+        else
+            Logger.info("services.CustomerService.getByName(): returned " + results.size() + " customers.");
+        return results;
     }
 
 }

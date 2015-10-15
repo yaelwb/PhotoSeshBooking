@@ -23,10 +23,10 @@ RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
         <li>model/Booking: id, customer id, status id <br>
         Event: date, location, type, duration, price, key attendees <br>
         Preparation: requirements, equipment, camera settings, optimal lighting spots <br>
-        Editing: num_pics, num_selected, num_processed
+        Editing: number of pictures taken, number of pictures selected, number of pictures processed
         </li>
-        <li>app/controllers/BookingController.java - create</li>
-        <li>app/services/BookingService.java</li>
+        <li>app/controllers/BookingController.java - create, get (all, by id), delete</li>
+        <li>app/services/BookingService.java - support for BookingController</li>
         </ul>
   </li>
   <li>

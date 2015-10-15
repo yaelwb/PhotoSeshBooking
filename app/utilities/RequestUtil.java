@@ -18,7 +18,7 @@ public class RequestUtil extends Controller {
      * @param query - a query about to be executed, to set first results and max results.
      */
     public static void paginate(Query query) {
-        Integer pageNum = getQueryParamAsInt("pageNum");
+        Integer pageNum = getQueryParamAsInt("page");
         if (pageNum != null && pageNum > 0) {
             Integer maxItems = getQueryParamAsInt("maxItems");
             if (maxItems == null)

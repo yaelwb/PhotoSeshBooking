@@ -1,12 +1,17 @@
 package services;
 
 import models.Booking;
+import org.hibernate.Criteria;
+import org.hibernate.Session;
+import org.hibernate.criterion.Restrictions;
 import play.Logger;
 import play.db.jpa.JPA;
 import utilities.RequestUtil;
 
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -45,18 +50,53 @@ public class BookingServiceImpl implements BookingService {
         return res;
     }
 
+//    @Override
+//    public List<Booking> getAll() {
+//        String queryString = "from Booking";
+//        TypedQuery<Booking> query = JPA.em().createQuery(queryString, Booking.class);
+//        RequestUtil.paginate(query);
+//        List<Booking> l = query.getResultList();
+//
+//        if (l == null || l.isEmpty())
+//            Logger.info("services.BookingService.getAll(): No bookings to show");
+//        else
+//            Logger.info("services.BookingService.getAll(): returned " + l.size() + " bookings.");
+//        return l;
+//    }
+
     @Override
     public List<Booking> getAll() {
-        String queryString = "from Booking";
-        TypedQuery<Booking> query = JPA.em().createQuery(queryString, Booking.class);
-        RequestUtil.paginate(query);
-        List<Booking> l = query.getResultList();
+        Session session = JPA.em().unwrap(Session.class);
+        Criteria cr = session.createCriteria(Booking.class);
 
-        if (l == null || l.isEmpty())
+        String eventType = RequestUtil.getQueryParam("eventType");
+        if(eventType != null)
+            cr.add(Restrictions.eq("eventType", eventType));
+
+        String eventDateFrom = RequestUtil.getQueryParam("eventDateFrom");
+        if(eventDateFrom != null)
+            cr.add(Restrictions.ge("eventDate", Timestamp.valueOf(eventDateFrom)));
+
+        String eventDateTo = RequestUtil.getQueryParam("eventDateTo");
+        if(eventDateTo != null)
+            cr.add(Restrictions.le("eventDate", Timestamp.valueOf(eventDateTo)));
+
+        String fromPrice = RequestUtil.getQueryParam("fromPrice");
+        if(fromPrice != null)
+            cr.add(Restrictions.ge("price", new BigDecimal(fromPrice)));
+
+        String toPrice = RequestUtil.getQueryParam("toPrice");
+        if(toPrice != null)
+            cr.add(Restrictions.le("price", new BigDecimal(toPrice)));
+
+        RequestUtil.paginate(cr);
+        List<Booking> results = cr.list();
+
+        if (results == null || results.isEmpty())
             Logger.info("services.BookingService.getAll(): No bookings to show");
         else
-            Logger.info("services.BookingService.getAll(): returned " + l.size() + " bookings.");
-        return l;
+            Logger.info("services.BookingService.getAll(): returned " + results.size() + " bookings.");
+        return results;
     }
 
     @Override

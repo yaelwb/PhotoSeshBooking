@@ -4,6 +4,7 @@ import java.util.Map;
 import play.Play;
 import play.mvc.Controller;
 import javax.persistence.Query;
+import org.hibernate.Criteria;
 
 /**
  * Created by yael on 10/3/15.
@@ -15,20 +16,20 @@ public class RequestUtil extends Controller {
     }
 
     /** paginate: Auxiliary method to help divide query results and show the requested item for a page num.
-     * @param query - a query about to be executed, to set first results and max results.
+     * @param Criteria - a criteria about to be executed, to set first results and max results.
      */
-    public static void paginate(Query query) {
+
+    public static void paginate(Criteria criteria) {
         Integer pageNum = getQueryParamAsInt("page");
         if (pageNum != null && pageNum > 0) {
             Integer maxItems = getQueryParamAsInt("maxItems");
             if (maxItems == null)
                 maxItems = Integer.parseInt(getConfig("photosesh.pagination.maxitems"));
 
-            query.setFirstResult(maxItems * (pageNum - 1));
-            query.setMaxResults(maxItems);
+            criteria.setFirstResult(maxItems * (pageNum - 1));
+            criteria.setMaxResults(maxItems);
         }
     }
-
     /** getQueryParam: Auxiliary method to a common task of retrieving a parameter value from a url request.
      * @param field - the field to extract value for.
      * @return String: the value if extracted, null otherwise.

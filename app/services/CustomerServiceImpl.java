@@ -13,6 +13,7 @@ import javax.persistence.Query;
 import javax.persistence.TypedQuery;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by yael on 10/13/15.
@@ -101,18 +102,53 @@ public class CustomerServiceImpl implements CustomerService {
         return res;
     }
 
+//    @Override
+//    public List<Customer> getAll() {
+//        String queryString = "from Customer";
+//        TypedQuery<Customer> query = JPA.em().createQuery(queryString, Customer.class);
+//        RequestUtil.paginate(query);
+//        List<Customer> l = query.getResultList();
+//
+//        if (l == null || l.isEmpty())
+//            Logger.info("services.CustomerService.getAll(): No Customers to show");
+//        else
+//            Logger.info("services.CustomerService.getAll(): returned " + l.size() + " customers.");
+//        return l;
+//    }
+
     @Override
     public List<Customer> getAll() {
-        String queryString = "from Customer";
-        TypedQuery<Customer> query = JPA.em().createQuery(queryString, Customer.class);
-        RequestUtil.paginate(query);
-        List<Customer> l = query.getResultList();
+        Session session = JPA.em().unwrap(Session.class);
+        Criteria cr = session.createCriteria(Customer.class);
 
-        if (l == null || l.isEmpty())
+        String first = RequestUtil.getQueryParam("first");
+        if(first != null)
+            cr.add(Restrictions.eq("firstName", first));
+
+        String last = RequestUtil.getQueryParam("last");
+        if(last != null)
+            cr.add(Restrictions.eq("lastName", last));
+
+        String payMethod = RequestUtil.getQueryParam("payMethod");
+        if(payMethod != null)
+            cr.add(Restrictions.eq("payMethod", payMethod));
+
+        String fromBalance = RequestUtil.getQueryParam("fromBalance");
+        if(fromBalance != null)
+            cr.add(Restrictions.ge("balance", new BigDecimal(fromBalance)));
+
+        String toBalance = RequestUtil.getQueryParam("toBalance");
+        if(toBalance != null)
+            cr.add(Restrictions.le("balance", new BigDecimal(toBalance)));
+
+        RequestUtil.paginate(cr);
+        List<Customer> results = cr.list();
+
+        if (results == null || results.isEmpty())
             Logger.info("services.CustomerService.getAll(): No Customers to show");
         else
-            Logger.info("services.CustomerService.getAll(): returned " + l.size() + " customers.");
-        return l;
+            Logger.info("services.CustomerService.getAll(): returned " + results.size() + " customers.");
+        return results;
     }
 
     @Override

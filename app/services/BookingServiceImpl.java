@@ -9,7 +9,6 @@ import play.db.jpa.JPA;
 import utilities.RequestUtil;
 
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.List;
@@ -50,24 +49,14 @@ public class BookingServiceImpl implements BookingService {
         return res;
     }
 
-//    @Override
-//    public List<Booking> getAll() {
-//        String queryString = "from Booking";
-//        TypedQuery<Booking> query = JPA.em().createQuery(queryString, Booking.class);
-//        RequestUtil.paginate(query);
-//        List<Booking> l = query.getResultList();
-//
-//        if (l == null || l.isEmpty())
-//            Logger.info("services.BookingService.getAll(): No bookings to show");
-//        else
-//            Logger.info("services.BookingService.getAll(): returned " + l.size() + " bookings.");
-//        return l;
-//    }
-
     @Override
     public List<Booking> getAll() {
         Session session = JPA.em().unwrap(Session.class);
         Criteria cr = session.createCriteria(Booking.class);
+
+        String[] statusList = RequestUtil.getQueryParams("status");
+        if(statusList != null)
+            cr.add(Restrictions.in("status", statusList));
 
         String eventType = RequestUtil.getQueryParam("eventType");
         if(eventType != null)

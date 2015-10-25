@@ -15,6 +15,7 @@ DELETE  /customers                  controllers.CustomerController.delete()
 PUT     /bookings                   controllers.BookingController.create()
 GET     /bookings                   controllers.BookingController.getAll()
 GET     /bookings/byId              controllers.BookingController.getById()
+GET     /bookings/byNumTodo         controllers.BookingController.getByNumTodo()
 POST    /bookings                   controllers.BookingController.update()
 DELETE  /bookings                   controllers.BookingController.delete()
 

@@ -3,7 +3,6 @@ package utilities;
 import java.util.Map;
 import play.Play;
 import play.mvc.Controller;
-import javax.persistence.Query;
 import org.hibernate.Criteria;
 
 /**
@@ -16,7 +15,7 @@ public class RequestUtil extends Controller {
     }
 
     /** paginate: Auxiliary method to help divide query results and show the requested item for a page num.
-     * @param Criteria - a criteria about to be executed, to set first results and max results.
+     * @param criteria - a criteria about to be executed, to set first results and max results.
      */
 
     public static void paginate(Criteria criteria) {
@@ -30,6 +29,22 @@ public class RequestUtil extends Controller {
             criteria.setMaxResults(maxItems);
         }
     }
+
+    /** getQueryParam: Auxiliary method to a common task of retrieving a parameter value list from a url request.
+     * @param field - the field to extract value for.
+     * @return String[]: the values if extracted, null otherwise.
+     */
+    public static String[] getQueryParams(String field) {
+        Map<String, String[]> requestString = request().queryString();
+        if(requestString == null || requestString.isEmpty())
+            return null;
+        String[] params = requestString.get(field);
+        if (params == null || params.length == 0 || params[0] == null) {
+            return null;
+        }
+        return params;
+    }
+
     /** getQueryParam: Auxiliary method to a common task of retrieving a parameter value from a url request.
      * @param field - the field to extract value for.
      * @return String: the value if extracted, null otherwise.
@@ -39,7 +54,7 @@ public class RequestUtil extends Controller {
         if(requestString == null || requestString.isEmpty())
             return null;
         String[] params = requestString.get(field);
-        if (params == null || params[0] == null) {
+        if (params == null || params.length == 0 || params[0] == null) {
             return null;
         }
         return params[0];
@@ -54,7 +69,7 @@ public class RequestUtil extends Controller {
         if(requestString == null || requestString.isEmpty())
             return null;
         String[] params = requestString.get(field);
-        if (params == null || params[0] == null) {
+        if (params == null || params.length == 0 || params[0] == null) {
             return null;
         }
         return Integer.parseInt(params[0]);
@@ -69,7 +84,7 @@ public class RequestUtil extends Controller {
         if(requestString == null || requestString.isEmpty())
             return null;
         String[] params = requestString.get(field);
-        if (params == null || params[0] == null) {
+        if (params == null || params.length == 0 || params[0] == null) {
             return null;
         }
         return Long.parseLong(params[0]);

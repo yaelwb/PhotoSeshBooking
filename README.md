@@ -1,7 +1,8 @@
 # PhotoSeshBooking - work in progress
 PhotoSeshBooking – A service for the busy photographer, to keep track of customers and bookings. 
 RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
-[Booking flow chart diagram](Photoshoot - flow chart.png)
+
+<p>[Booking flow chart diagram](Photoshoot - flow chart.png)</p>
 <ul>
 
   <li>

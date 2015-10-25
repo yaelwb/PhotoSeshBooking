@@ -1,6 +1,7 @@
 package controllers;
 
 import com.google.inject.Inject;
+import enums.State;
 import models.Booking;
 import play.Logger;
 import play.db.jpa.Transactional;
@@ -13,6 +14,7 @@ import services.CustomerService;
 import utilities.ActionAuthenticator;
 import utilities.Predicates;
 import utilities.RequestUtil;
+import utilities.StatusUtil;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -121,6 +123,11 @@ public class BookingController extends Controller {
         Booking booking = bookingService.get(updatedBooking.getId());
         if (booking == null) {
             return ok("No such booking currently in the system.");
+        }
+
+        if(!StatusUtil.stateChangeExists(booking.getStatus(), updatedBooking.getStatus())) {
+            Logger.error("controllers.BookingController.update(): can't switch to next state");
+            return badRequest("No path from state " + booking.getStatus() + " to state " + updatedBooking.getStatus());
         }
         bookingService.update(updatedBooking, booking);
         return ok(Json.toJson(booking));

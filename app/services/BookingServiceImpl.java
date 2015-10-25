@@ -1,5 +1,6 @@
 package services;
 
+import enums.State;
 import models.Booking;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -7,6 +8,7 @@ import org.hibernate.criterion.Restrictions;
 import play.Logger;
 import play.db.jpa.JPA;
 import utilities.RequestUtil;
+import utilities.StatusUtil;
 
 import javax.persistence.Query;
 import java.math.BigDecimal;
@@ -30,12 +32,6 @@ public class BookingServiceImpl implements BookingService {
         JPA.em().persist(booking);
         Logger.info("services.BookingService.create(): Created booking " + booking.toString());
         return booking;
-    }
-
-    //TODO
-    @Override
-    public void update(Booking from, Booking to) {
-
     }
 
     @Override
@@ -96,5 +92,87 @@ public class BookingServiceImpl implements BookingService {
         else
             Logger.info("services.BookingService.get(): returned " + booking.toString());
         return booking;
+    }
+
+    //TODO
+    @Override
+    public void update(Booking from, Booking to) {
+        State toState = StatusUtil.getState(to.getStatus());
+        switch(toState) {
+            case BOOKED:
+                booked(from, to);
+                break;
+            case DOWNPAYMENT:
+                downpayment(from, to);
+                break;
+            case PREPARATION:
+                preparation(from, to);
+                break;
+            case PHOTOSHOOT:
+                photoshoot(from, to);
+                break;
+            case PAYMENT:
+                payment(from, to);
+                break;
+            case SELECTIONS:
+                selections(from, to);
+                break;
+            case EDITING:
+                editing(from, to);
+                break;
+            case REVIEW:
+                review(from, to);
+                break;
+            //no check or field update needed except for status update
+            case COMPLETE:
+                from.setStatus(State.COMPLETE.toString());
+                break;
+            case CANCELED:
+                cancel(from, to);
+                break;
+            case POSTPONED:
+                postpone(from, to);
+                break;
+        }
+    }
+
+    private void booked (Booking from, Booking to) {
+
+    }
+
+    private void downpayment (Booking from, Booking to) {
+
+    }
+
+    private void preparation (Booking from, Booking to) {
+
+    }
+
+    private void photoshoot (Booking from, Booking to) {
+
+    }
+
+    private void payment (Booking from, Booking to) {
+
+    }
+
+    private void selections (Booking from, Booking to) {
+
+    }
+
+    private void editing (Booking from, Booking to) {
+
+    }
+
+    private void review (Booking from, Booking to) {
+
+    }
+
+    private void cancel (Booking from, Booking to) {
+
+    }
+
+    private void postpone (Booking from, Booking to) {
+
     }
 }

@@ -10,10 +10,8 @@ import utilities.Parse;
 import utilities.RequestUtil;
 
 import javax.persistence.Query;
-import javax.persistence.TypedQuery;
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by yael on 10/13/15.
@@ -101,20 +99,6 @@ public class CustomerServiceImpl implements CustomerService {
             Logger.info("services.CustomerService.delete(): deleted customer " + id);
         return res;
     }
-
-//    @Override
-//    public List<Customer> getAll() {
-//        String queryString = "from Customer";
-//        TypedQuery<Customer> query = JPA.em().createQuery(queryString, Customer.class);
-//        RequestUtil.paginate(query);
-//        List<Customer> l = query.getResultList();
-//
-//        if (l == null || l.isEmpty())
-//            Logger.info("services.CustomerService.getAll(): No Customers to show");
-//        else
-//            Logger.info("services.CustomerService.getAll(): returned " + l.size() + " customers.");
-//        return l;
-//    }
 
     @Override
     public List<Customer> getAll() {

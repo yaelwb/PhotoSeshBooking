@@ -1,6 +1,7 @@
 package controllers;
 
 import com.google.inject.Inject;
+import enums.State;
 import models.Booking;
 import play.Logger;
 import play.db.jpa.Transactional;
@@ -11,9 +12,12 @@ import play.mvc.Security;
 import services.BookingService;
 import services.CustomerService;
 import utilities.ActionAuthenticator;
+import utilities.Predicates;
 import utilities.RequestUtil;
+import utilities.StatusUtil;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by yael on 10/13/15.
@@ -81,6 +85,33 @@ public class BookingController extends Controller {
         return ok(Json.toJson(booking));
     }
 
+    /** getByNumTodo: Finds and shows a bookings that have a specified number of images to process.
+     * GET request to /booking/getByNumTodo with from, to as parameters.
+     * @return Result: A Json representation of the requested bookings, if exist.
+     */
+    @Transactional
+    @Security.Authenticated(ActionAuthenticator.class)
+    public Result getByNumTodo() {
+        Integer from = RequestUtil.getQueryParamAsInt("from");
+        Integer to = RequestUtil.getQueryParamAsInt("to");
+
+        if (from == null && to == null) {
+            Logger.error("controllers.BookingController.getByNumTodo(): No parameters");
+            return badRequest("Please provide from/to parameters");
+        }
+
+        List<Booking> l = bookingService.getAll();
+        if(from != null)
+            l.stream().filter(Predicates.imagesToProcessGreaterOrEqual(from)).collect(Collectors.toList());
+        if(to != null)
+            l.stream().filter(Predicates.imagesToProcessLessOrEqual(to)).collect(Collectors.toList());
+
+        if (l.isEmpty() ) {
+            return ok("No such bookings currently in the system.");
+        }
+        return ok(Json.toJson(l));
+    }
+
     /** update: Update an existing booking. Only valid fields are copied.
      * POST request to /bookings supplying a Json representation of the updated booking.
      * @return Result: The updated booking.
@@ -92,6 +123,11 @@ public class BookingController extends Controller {
         Booking booking = bookingService.get(updatedBooking.getId());
         if (booking == null) {
             return ok("No such booking currently in the system.");
+        }
+
+        if(!StatusUtil.stateChangeExists(booking.getStatus(), updatedBooking.getStatus())) {
+            Logger.error("controllers.BookingController.update(): can't switch to next state");
+            return badRequest("No path from state " + booking.getStatus() + " to state " + updatedBooking.getStatus());
         }
         bookingService.update(updatedBooking, booking);
         return ok(Json.toJson(booking));

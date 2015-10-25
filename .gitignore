@@ -22,3 +22,4 @@ PhotoSesh.iml
 scala-play-2
 activator-launch-1.3.6
 activator-launch-1.3.6.jar
+set-test-vars.sh

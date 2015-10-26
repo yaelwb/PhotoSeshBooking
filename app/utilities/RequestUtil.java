@@ -1,5 +1,6 @@
 package utilities;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import play.Play;
 import play.mvc.Controller;
@@ -88,5 +89,20 @@ public class RequestUtil extends Controller {
             return null;
         }
         return Long.parseLong(params[0]);
+    }
+
+    /** getQueryParamAsLong: Auxiliary method for retrieving a parameter value from a url request, as a long.
+     * @param field - the field to extract value for.
+     * @return Long: the value if extracted, null otherwise.
+     */
+    public static BigDecimal getQueryParamAsBigDecimal(String field) {
+        Map<String, String[]> requestString = request().queryString();
+        if(requestString == null || requestString.isEmpty())
+            return null;
+        String[] params = requestString.get(field);
+        if (params == null || params.length == 0 || params[0] == null) {
+            return null;
+        }
+        return new BigDecimal(params[0]);
     }
 }

@@ -11,7 +11,7 @@ import java.util.List;
 @ImplementedBy(BookingServiceImpl.class)
 public interface BookingService {
     Booking create(Booking inputBooking, CustomerService customerService);
-    void update(Booking from, Booking to);
+    String update(Booking from, Booking to);
     int delete(Long id);
 
     List<Booking> getAll();

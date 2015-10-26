@@ -129,7 +129,10 @@ public class BookingController extends Controller {
             Logger.error("controllers.BookingController.update(): can't switch to next state");
             return badRequest("No path from state " + booking.getStatus() + " to state " + updatedBooking.getStatus());
         }
-        bookingService.update(updatedBooking, booking);
+        String errorMsg = bookingService.update(updatedBooking, booking);
+        if(errorMsg != null)
+            return badRequest(errorMsg);
+
         return ok(Json.toJson(booking));
     }
 

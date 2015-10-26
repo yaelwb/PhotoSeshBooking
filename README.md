@@ -1,4 +1,4 @@
-# PhotoSeshBooking - work in progress
+# PhotoSeshBooking
 PhotoSeshBooking – A service for the busy photographer, to keep track of customers and bookings. 
 RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
 <br>
@@ -48,7 +48,7 @@ Main functionality:
     <li>utilities/Parse.java - validate name, phone, email strings</li>
     <li>utilities/RequestUtil.java - get parameters from query request, paginate results</li>
     <li>utilities/StatusUtil.java - cache for Status, state, status id - to reduce db calls.
-    <br>Also assists the state machine via stateChangeExists(), Map<State, Set<State>> stateChanges </li>
+    <br>Also assists the state machine via stateChangeExists(), stateChanges: mapping State->Set of States</li>
     </ul>
   </li>
   <li>

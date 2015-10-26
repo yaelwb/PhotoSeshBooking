@@ -1,5 +1,6 @@
 package services;
 
+import com.google.inject.Inject;
 import enums.State;
 import models.Booking;
 import org.hibernate.Criteria;
@@ -19,6 +20,14 @@ import java.util.List;
  * Created by yael on 10/13/15.
  */
 public class BookingServiceImpl implements BookingService {
+
+    private final CustomerService customerService;
+
+    @Inject
+    public BookingServiceImpl(CustomerService customerService) {
+        this.customerService = customerService;
+    }
+
     @Override
     public Booking create(Booking inputBooking, CustomerService customerService) {
         Long customerId = inputBooking.getCustomerId();
@@ -94,85 +103,165 @@ public class BookingServiceImpl implements BookingService {
         return booking;
     }
 
-    //TODO
     @Override
-    public void update(Booking from, Booking to) {
-        State toState = StatusUtil.getState(to.getStatus());
+    public String update(Booking input, Booking orig) {
+        State toState = StatusUtil.getState(input.getStatus());
         switch(toState) {
             case BOOKED:
-                booked(from, to);
-                break;
+                return booked(input, orig);
             case DOWNPAYMENT:
-                downpayment(from, to);
-                break;
+                return downpayment(input, orig);
             case PREPARATION:
-                preparation(from, to);
-                break;
+                return preparation(input, orig);
             case PHOTOSHOOT:
-                photoshoot(from, to);
-                break;
+                return photoshoot(input, orig);
             case PAYMENT:
-                payment(from, to);
+                return payment(input, orig);
+            case SELECTIONS:
+                return selections(input, orig);
+            case EDITING:
+                return editing(input, orig);
+            case REVIEW:
+                return review(input, orig);
+            case COMPLETE:
+                return complete(input, orig);
+            case CANCELED:
+                return cancel(input, orig);
+            case POSTPONED:
+                return postpone(input, orig);
+        }
+        return null;
+    }
+
+    private String booked (Booking input, Booking orig) {
+        //check the required data either exists or is being set
+        if(input.getEventDate() == null && orig.getEventDate() == null)
+            return "You must set a date for the event to be booked.";
+        if(input.getLocation() == null && orig.getLocation() == null)
+            return "You must set a location for the event to be booked.";
+        if(input.getEventType() == null && orig.getEventType() == null)
+            return "You must set an event type for the event to be booked.";
+        if(input.getPrice() == null && orig.getPrice() == null)
+            return "You must set a price for the event to be booked.";
+
+        //All good, update the db entry
+        orig.setEventDate(input.getEventDate());
+        orig.setLocation(input.getLocation());
+        orig.setEventType(input.getEventType());
+        orig.setPrice(input.getPrice());
+        orig.setAmountPaid(new BigDecimal(0.0));
+        customerService.addToBalance(input.getCustomerId(), input.getPrice());
+        orig.setStatus(State.BOOKED.toString());
+        return null;
+    }
+
+    //TODO
+    private String downpayment (Booking input, Booking orig) {
+        return null;
+    }
+
+    //TODO
+    private String preparation (Booking input, Booking orig) {
+        return null;
+    }
+
+    //TODO
+    private String photoshoot (Booking input, Booking orig) {
+        return null;
+    }
+
+    private String payment (Booking input, Booking orig) {
+        BigDecimal increment = input.getAmountPaid();
+        increment.subtract(orig.getAmountPaid());
+        customerService.subtractFromBalance(orig.getCustomerId(), increment);
+
+        orig.setAmountPaid(input.getAmountPaid());
+        orig.setStatus(State.PAYMENT.toString());
+        return null;
+    }
+
+    private String selections (Booking input, Booking orig) {
+        State fromState = StatusUtil.getState(orig.getStatus());
+        switch(fromState) {
+            case PAYMENT:
+                //override payment - allow customer to pay a part of the balance later on
+                String override = RequestUtil.getQueryParam("overridePayment");
+                if(!input.getAmountPaid().equals(input.getPrice())) {
+                    if (override == null || override.equals("false")) {
+                        return "Amount must be paid in full before selections are made.";
+                    }
+                }
+                orig.setNumProcessed(0);
                 break;
             case SELECTIONS:
-                selections(from, to);
-                break;
-            case EDITING:
-                editing(from, to);
+                orig.setNumSelected(input.getNumSelected());
                 break;
             case REVIEW:
-                review(from, to);
-                break;
-            //no check or field update needed except for status update
-            case COMPLETE:
-                from.setStatus(State.COMPLETE.toString());
-                break;
-            case CANCELED:
-                cancel(from, to);
-                break;
-            case POSTPONED:
-                postpone(from, to);
+                orig.setNumSelected(input.getNumSelected());
+                orig.setNumProcessed(input.getNumProcessed());
+                orig.setReviewNotes(input.getReviewNotes());
                 break;
         }
+
+        orig.setStatus(State.SELECTIONS.toString());
+        return null;
     }
 
-    private void booked (Booking from, Booking to) {
+    private String editing (Booking input, Booking orig) {
+        State fromState = StatusUtil.getState(orig.getStatus());
+        switch(fromState) {
+            case SELECTIONS:
+                orig.setNumProcessed(0);
+                break;
+            case EDITING:
+                orig.setNumProcessed(input.getNumProcessed());
+                break;
+            case REVIEW:
+                orig.setNumSelected(input.getNumSelected());
+                orig.setNumProcessed(input.getNumProcessed());
+                orig.setReviewNotes(input.getReviewNotes());
+                break;
+        }
 
+        orig.setStatus(State.EDITING.toString());
+        return null;
     }
 
-    private void downpayment (Booking from, Booking to) {
+    private String review (Booking input, Booking orig) {
+        String override = RequestUtil.getQueryParam("override");
+        int numTodo = input.getNumSelected() - input.getNumProcessed();
+        if(numTodo > 0) {
+            if (override == null || override.equals("false")) {
+                return "There are " + numTodo + " unprocessed images. You must override in order to sent to partial review.";
+            }
+        }
 
+        orig.setStatus(State.REVIEW.toString());
+        return null;
     }
 
-    private void preparation (Booking from, Booking to) {
-
+    private String complete (Booking input, Booking orig) {
+        orig.setStatus(State.COMPLETE.toString());
+        return null;
     }
 
-    private void photoshoot (Booking from, Booking to) {
+    private String cancel (Booking input, Booking orig) {
+        BigDecimal refund = RequestUtil.getQueryParamAsBigDecimal("refund");
+        if (refund != null) {
+            customerService.subtractFromBalance(orig.getCustomerId(), orig.getPrice());
+        }
 
+        orig.setStatus(State.CANCELED.toString());
+        return null;
     }
 
-    private void payment (Booking from, Booking to) {
+    private String postpone (Booking input, Booking orig) {
+        if(input.getEventDate() != null && input.getEventDate().after(orig.getEventDate()))
+            orig.setEventDate(input.getEventDate());
+        else
+            orig.setEventDate(null);
 
-    }
-
-    private void selections (Booking from, Booking to) {
-
-    }
-
-    private void editing (Booking from, Booking to) {
-
-    }
-
-    private void review (Booking from, Booking to) {
-
-    }
-
-    private void cancel (Booking from, Booking to) {
-
-    }
-
-    private void postpone (Booking from, Booking to) {
-
+        orig.setStatus(State.POSTPONED.toString());
+        return null;
     }
 }

@@ -104,8 +104,11 @@ public class Booking {
     @Column
     private BigDecimal price;
 
+    @Column(name = "amount_paid")
+    private BigDecimal amountPaid;
+
     @Column(name = "key_attendees")
-    private String key_attendees;
+    private String keyAttendees;
 
     @Column
     private String requirements;
@@ -127,6 +130,9 @@ public class Booking {
 
     @Column(name = "num_processed")
     private int numProcessed;
+
+    @Column(name = "review_notes")
+    private String reviewNotes;
 
     @Override
     public String toString() {
@@ -179,12 +185,12 @@ public class Booking {
         this.price = price;
     }
 
-    public String getKey_attendees() {
-        return key_attendees;
+    public String getKeyAttendees() {
+        return keyAttendees;
     }
 
-    public void setKey_attendees(String key_attendees) {
-        this.key_attendees = key_attendees;
+    public void setKeyAttendees(String keyAttendees) {
+        this.keyAttendees = keyAttendees;
     }
 
     public String getRequirements() {
@@ -241,5 +247,21 @@ public class Booking {
 
     public void setNumProcessed(int numProcessed) {
         this.numProcessed = numProcessed;
+    }
+
+    public String getReviewNotes() {
+        return reviewNotes;
+    }
+
+    public void setReviewNotes(String reviewNotes) {
+        this.reviewNotes = reviewNotes;
+    }
+
+    public BigDecimal getAmountPaid() {
+        return amountPaid;
+    }
+
+    public void setAmountPaid(BigDecimal amountPaid) {
+        this.amountPaid = amountPaid;
     }
 }

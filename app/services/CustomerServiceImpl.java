@@ -161,5 +161,18 @@ public class CustomerServiceImpl implements CustomerService {
         return results;
     }
 
+    @Override
+    public void addToBalance(Long id, BigDecimal balance) {
+        Customer customer = get(id);
+        if(customer != null)
+            customer.setBalance(balance.add(customer.getBalance()));
+    }
+
+    @Override
+    public void subtractFromBalance(Long id, BigDecimal balance) {
+        Customer customer = get(id);
+        if(customer != null)
+            customer.setBalance(balance.subtract(customer.getBalance()));
+    }
 }
 

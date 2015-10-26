@@ -27,6 +27,7 @@ CREATE TABLE booking
 	event_type VARCHAR(30),
 	duration NUMERIC,
 	price NUMERIC,
+	amount_paid NUMERIC,
  	key_attendees VARCHAR(255),
 	requirements VARCHAR(255), 
 	equipment VARCHAR(255), 
@@ -36,6 +37,7 @@ CREATE TABLE booking
 	num_pics INT,
 	num_selected INT,
 	num_processed INT,
+	review_notes VARCHAR(255),
 	FOREIGN KEY ( customer_id ) REFERENCES customer ( id ),
 	FOREIGN KEY ( status_id ) REFERENCES status ( id )
 );

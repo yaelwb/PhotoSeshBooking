@@ -27,27 +27,30 @@ public class StatusUtil {
         stateChanges.put(State.CREATED,
                 new HashSet<>(Arrays.asList(new State[] {State.BOOKED, State.CANCELED})));
 
+        //booked, downpaynemt, and preparation can get update calls without changing a state,
+        //in order to update event information
         stateChanges.put(State.BOOKED,
-                new HashSet<>(Arrays.asList(new State[] {State.DOWNPAYMENT, State.CANCELED, State.POSTPONED})));
+                new HashSet<>(Arrays.asList(new State[] {State.DOWNPAYMENT, State.CANCELED, State.POSTPONED, State.BOOKED})));
 
         stateChanges.put(State.DOWNPAYMENT,
-                new HashSet<>(Arrays.asList(new State[] {State.PREPARATION, State.CANCELED, State.POSTPONED})));
+                new HashSet<>(Arrays.asList(new State[] {State.PREPARATION, State.CANCELED, State.POSTPONED, State.DOWNPAYMENT})));
 
         stateChanges.put(State.PREPARATION,
-                new HashSet<>(Arrays.asList(new State[] {State.PHOTOSHOOT, State.CANCELED, State.POSTPONED})));
+                new HashSet<>(Arrays.asList(new State[] {State.PHOTOSHOOT, State.CANCELED, State.POSTPONED, State.PREPARATION})));
 
         //once the photoshoot has taken place, no option to cancel or postpone
         stateChanges.put(State.PHOTOSHOOT,
                 new HashSet<>(Arrays.asList(new State[] {State.PAYMENT})));
 
         stateChanges.put(State.PAYMENT,
-                new HashSet<>(Arrays.asList(new State[] {State.SELECTIONS})));
+                new HashSet<>(Arrays.asList(new State[] {State.SELECTIONS, State.PAYMENT})));
 
+        //selections and editing can get update calls without changing a state, for num selected/num edited updates
         stateChanges.put(State.SELECTIONS,
-                new HashSet<>(Arrays.asList(new State[] {State.EDITING})));
+                new HashSet<>(Arrays.asList(new State[] {State.EDITING, State.SELECTIONS})));
 
         stateChanges.put(State.EDITING,
-                new HashSet<>(Arrays.asList(new State[] {State.REVIEW})));
+                new HashSet<>(Arrays.asList(new State[] {State.REVIEW, State.EDITING})));
 
         //from review it can go further to complete, or back to either selections or editing
         stateChanges.put(State.REVIEW,

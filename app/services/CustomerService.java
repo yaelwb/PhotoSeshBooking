@@ -3,6 +3,7 @@ package services;
 import com.google.inject.ImplementedBy;
 import models.Customer;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -11,7 +12,6 @@ import java.util.List;
 @ImplementedBy(CustomerServiceImpl.class)
 public interface CustomerService {
 
-    boolean customerIdExists(Long id);
     Customer create(Customer inputCustomer);
     String validate(Customer customer);
     void update(Customer from, Customer to);
@@ -21,4 +21,8 @@ public interface CustomerService {
     Customer get(Long id);
     List<Customer> getByName(String first, String last);
 
+    //Auxiliary methods for booking usage
+    boolean customerIdExists(Long id);
+    void addToBalance(Long id, BigDecimal balance);
+    void subtractFromBalance(Long id, BigDecimal balance);
 }

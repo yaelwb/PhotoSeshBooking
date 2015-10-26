@@ -2,7 +2,14 @@
 PhotoSeshBooking – A service for the busy photographer, to keep track of customers and bookings. 
 RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
 <br>
+<br>
 [Booking flow chart diagram](Photoshoot - flow chart.png)
+<br>
+Main functionality:
+<br>
+[app/services/BookingServiceImpl.java](app/services/BookingServiceImpl.java)
+<br>
+[app/services/CustomerServiceImpl.java](app/services/CustomerServiceImpl.java)
 <br>
 <ul>
 
@@ -18,6 +25,7 @@ RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
     <li>model/Customer - First name, last name, email, phone, pay method, balance</li>
     <li>app/controllers/CustomerController.java - create, get (all, by id, by name), update, delete</li>
     <li>app/services/CustomerService.java - support for CustomerController</li>
+    <li>[app/services/CustomerServiceImpl.java](app/services/CustomerServiceImpl.java)</li>
     </ul>
   </li>
   <li>
@@ -28,8 +36,9 @@ RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
         Preparation: requirements, equipment, camera settings, optimal lighting spots <br>
         Editing: number of pictures taken, number of pictures selected, number of pictures processed
         </li>
-        <li>app/controllers/BookingController.java - create, get (all, by id), delete</li>
+        <li>app/controllers/BookingController.java - create, get (all, by id, by filters), delete, update</li>
         <li>app/services/BookingService.java - support for BookingController</li>
+        <li>[app/services/BookingServiceImpl.java](app/services/BookingServiceImpl.java)</li>
         </ul>
   </li>
   <li>
@@ -38,7 +47,8 @@ RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
     <li>utilities/ActionAuthenticator.java - basic authentication</li>
     <li>utilities/Parse.java - validate name, phone, email strings</li>
     <li>utilities/RequestUtil.java - get parameters from query request, paginate results</li>
-    <li>utilities/StatusUtil.java - cache for Status, state, status id - to reduce db calls</li>
+    <li>[utilities/StatusUtil.java](utilities/StatusUtil.java) - cache for Status, state, status id - to reduce db calls.
+    <br>Also assists the state machine via stateChangeExists(), Map<State, Set<State>> stateChanges </li>
     </ul>
   </li>
   <li>

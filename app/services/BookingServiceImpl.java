@@ -232,7 +232,7 @@ public class BookingServiceImpl implements BookingService {
         int numTodo = input.getNumSelected() - input.getNumProcessed();
         if(numTodo > 0) {
             if (override == null || override.equals("false")) {
-                return "There are " + numTodo + " unprocessed images. You must override in order to sent to partial review.";
+                return "There are " + numTodo + " unprocessed images. You must override in order to send to partial review.";
             }
         }
 

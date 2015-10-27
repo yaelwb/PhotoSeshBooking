@@ -13,6 +13,7 @@ import utilities.StatusUtil;
 
 import javax.persistence.Query;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -22,6 +23,7 @@ import java.util.List;
 public class BookingServiceImpl implements BookingService {
 
     private final CustomerService customerService;
+    private MathContext mc = new MathContext(2); // 2 precision
 
     @Inject
     public BookingServiceImpl(CustomerService customerService) {
@@ -133,49 +135,124 @@ public class BookingServiceImpl implements BookingService {
         return null;
     }
 
+    //date, location, type - might be updated after initially set.
+    private void updateBasicInfo(Booking input, Booking orig) {
+        if(input.getEventDate() != null && input.getEventDate() != orig.getEventDate())
+            orig.setEventDate(input.getEventDate());
+
+        if(input.getLocation() != null && !input.getLocation().equals(orig.getLocation()))
+            orig.setLocation(input.getLocation());
+
+        if(input.getEventType() != null && !input.getEventType().equals(orig.getEventType()))
+            orig.setEventType(input.getEventType());
+    }
+
+    //customer additional info - duration, key attendees, requirement. can be updated multiple times
+    private void updateAdditionalInfo(Booking input, Booking orig) {
+        if(input.getDuration() != null && !input.getDuration().equals(orig.getDuration()))
+            orig.setDuration(input.getDuration());
+
+        if(input.getKeyAttendees() != null && !input.getKeyAttendees().equals(orig.getKeyAttendees()))
+            orig.setKeyAttendees(input.getKeyAttendees());
+
+        if(input.getRequirements() != null && !input.getRequirements().equals(orig.getRequirements()))
+            orig.setRequirements(input.getRequirements());
+    }
+
     private String booked (Booking input, Booking orig) {
+        State fromState = StatusUtil.getState(orig.getStatus());
+
         //check the required data either exists or is being set
-        if(input.getEventDate() == null && orig.getEventDate() == null)
-            return "You must set a date for the event to be booked.";
-        if(input.getLocation() == null && orig.getLocation() == null)
-            return "You must set a location for the event to be booked.";
-        if(input.getEventType() == null && orig.getEventType() == null)
-            return "You must set an event type for the event to be booked.";
-        if(input.getPrice() == null && orig.getPrice() == null)
-            return "You must set a price for the event to be booked.";
+        if(fromState == State.CREATED) {
+            if (input.getEventDate() == null && orig.getEventDate() == null)
+                return "You must set a date for the event to be booked.";
+            if (input.getLocation() == null && orig.getLocation() == null)
+                return "You must set a location for the event to be booked.";
+            if (input.getEventType() == null && orig.getEventType() == null)
+                return "You must set an event type for the event to be booked.";
+            if (input.getPrice() == null && orig.getPrice() == null)
+                return "You must set a price for the event to be booked.";
+            orig.setAmountPaid(new BigDecimal(0.0));
+        }
 
         //All good, update the db entry
-        orig.setEventDate(input.getEventDate());
-        orig.setLocation(input.getLocation());
-        orig.setEventType(input.getEventType());
+        updateBasicInfo(input, orig);
+
+        //price is set. paid amount is not modified - we have downpayment state for that
         orig.setPrice(input.getPrice());
-        orig.setAmountPaid(new BigDecimal(0.0));
         customerService.addToBalance(input.getCustomerId(), input.getPrice());
+
+        //additional info might be updated
+        updateAdditionalInfo(input, orig);
+
         orig.setStatus(State.BOOKED.toString());
         return null;
     }
 
-    //TODO
     private String downpayment (Booking input, Booking orig) {
+        BigDecimal paid = input.getAmountPaid().subtract(orig.getAmountPaid(), mc);
+        customerService.subtractFromBalance(orig.getCustomerId(), paid);
+        orig.setAmountPaid(input.getAmountPaid());
+
+        //some info might be updated
+        updateBasicInfo(input, orig);
+        updateAdditionalInfo(input, orig);
+
+        //price still might be negotiated and changed during downpayment and preparation states
+        if(input.getPrice() != null && !input.getPrice().equals(orig.getPrice())) {
+            BigDecimal diff = input.getPrice().subtract(orig.getPrice(), mc);
+            customerService.addToBalance(input.getCustomerId(), diff);
+            orig.setPrice(input.getPrice());
+        }
+
+        orig.setStatus(State.DOWNPAYMENT.toString());
         return null;
     }
 
-    //TODO
     private String preparation (Booking input, Booking orig) {
+        //basic info can no longer be updated. however additional info such as requirements can be added
+        updateAdditionalInfo(input, orig);
+
+        //photographer's info is added
+        if(input.getEquipment() != null)
+            orig.setEquipment(input.getEquipment());
+        if(input.getCameraSettings() != null)
+            orig.setCameraSettings(input.getCameraSettings());
+        if(input.getOptimalLightingSpots() != null)
+            orig.setOptimalLightingSpots(input.getOptimalLightingSpots());
+
+        //last chance for price to be negotiated and changed
+        if(input.getPrice() != null && !input.getPrice().equals(orig.getPrice())) {
+            BigDecimal diff = input.getPrice().subtract(orig.getPrice(), mc);
+            customerService.addToBalance(input.getCustomerId(), diff);
+            orig.setPrice(input.getPrice());
+        }
+
+        orig.setStatus(State.PREPARATION.toString());
         return null;
     }
 
-    //TODO
     private String photoshoot (Booking input, Booking orig) {
+        //last minute additional info such as key attendees can be added
+        updateAdditionalInfo(input, orig);
+
+        //camera settings might be tweaked. register new optimal lighting spots fro future reference
+        if(input.getCameraSettings() != null)
+            orig.setCameraSettings(input.getCameraSettings());
+        if(input.getOptimalLightingSpots() != null)
+            orig.setOptimalLightingSpots(input.getOptimalLightingSpots());
+
+        orig.setNumPics(input.getNumPics());
+
+        orig.setStatus(State.PHOTOSHOOT.toString());
         return null;
     }
 
     private String payment (Booking input, Booking orig) {
-        BigDecimal increment = input.getAmountPaid();
-        increment.subtract(orig.getAmountPaid());
-        customerService.subtractFromBalance(orig.getCustomerId(), increment);
-
+        BigDecimal paid = input.getAmountPaid().subtract(orig.getAmountPaid(), mc);
+        customerService.subtractFromBalance(orig.getCustomerId(), paid);
         orig.setAmountPaid(input.getAmountPaid());
+
         orig.setStatus(State.PAYMENT.toString());
         return null;
     }
@@ -188,7 +265,7 @@ public class BookingServiceImpl implements BookingService {
                 String override = RequestUtil.getQueryParam("overridePayment");
                 if(!input.getAmountPaid().equals(input.getPrice())) {
                     if (override == null || override.equals("false")) {
-                        return "Amount must be paid in full before selections are made.";
+                        return "Amount must be paid in full before selections are made. Override option is available";
                     }
                 }
                 orig.setNumProcessed(0);
@@ -248,7 +325,7 @@ public class BookingServiceImpl implements BookingService {
     private String cancel (Booking input, Booking orig) {
         BigDecimal refund = RequestUtil.getQueryParamAsBigDecimal("refund");
         if (refund != null) {
-            customerService.subtractFromBalance(orig.getCustomerId(), orig.getPrice());
+            customerService.subtractFromBalance(orig.getCustomerId(), refund);
         }
 
         orig.setStatus(State.CANCELED.toString());

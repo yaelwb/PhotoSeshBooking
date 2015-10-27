@@ -11,12 +11,15 @@ import utilities.RequestUtil;
 
 import javax.persistence.Query;
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.List;
 
 /**
  * Created by yael on 10/13/15.
  */
 public class CustomerServiceImpl implements CustomerService {
+
+    private MathContext mc = new MathContext(2); // 2 precision
 
     @Override
     public boolean customerIdExists(Long id) {
@@ -165,14 +168,14 @@ public class CustomerServiceImpl implements CustomerService {
     public void addToBalance(Long id, BigDecimal balance) {
         Customer customer = get(id);
         if(customer != null)
-            customer.setBalance(balance.add(customer.getBalance()));
+            customer.setBalance(balance.add(customer.getBalance(), mc));
     }
 
     @Override
     public void subtractFromBalance(Long id, BigDecimal balance) {
         Customer customer = get(id);
         if(customer != null)
-            customer.setBalance(balance.subtract(customer.getBalance()));
+            customer.setBalance(balance.subtract(customer.getBalance(), mc));
     }
 }
 

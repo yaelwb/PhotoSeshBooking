@@ -40,7 +40,7 @@ public class StatusUtil {
 
         //once the photoshoot has taken place, no option to cancel or postpone
         stateChanges.put(State.PHOTOSHOOT,
-                new HashSet<>(Arrays.asList(new State[] {State.PAYMENT})));
+                new HashSet<>(Arrays.asList(new State[] {State.PAYMENT, State.PHOTOSHOOT})));
 
         stateChanges.put(State.PAYMENT,
                 new HashSet<>(Arrays.asList(new State[] {State.SELECTIONS, State.PAYMENT})));

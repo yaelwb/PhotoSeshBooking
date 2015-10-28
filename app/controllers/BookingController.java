@@ -44,9 +44,9 @@ public class BookingController extends Controller {
         Booking inputBooking = Json.fromJson(request().body().asJson(), Booking.class);
         Booking booking = bookingService.create(inputBooking, customerService);
         if(booking == null)
-            return badRequest("A valid customer id is a mandatory field.");
+            return badRequest("A valid customer id is a mandatory field. Received: "+ inputBooking.getCustomerId());
 
-        return ok(Json.toJson(booking.toString()));
+        return ok(Json.toJson(booking));
     }
 
     /** getAll: Show all bookings in the database. Supports pagination.
@@ -154,4 +154,16 @@ public class BookingController extends Controller {
         return ok("Deleted booking with id " + id);
     }
 
+    /** deleteAll: Deletes all existing bookings from the database.
+     * DELETE request to /bookings/DeleteAll.
+     * @return Result: A status message for deleting all cubookingsstomers, or no existing bookings. An error if no parameter.
+     */
+    @Transactional
+    @Security.Authenticated(ActionAuthenticator.class)
+    public Result deleteAll() {
+        int count = bookingService.deleteAll();
+        if (count == 0)
+            return ok("No bookings currently in the system.");
+        return ok("Deleted all " + count + " bookings");
+    }
 }

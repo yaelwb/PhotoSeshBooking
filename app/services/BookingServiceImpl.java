@@ -59,6 +59,17 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    public int deleteAll() {
+        Query query = JPA.em().createQuery("DELETE Booking");
+        int res = query.executeUpdate();
+        if (res == 0)
+            Logger.info("services.BookingService.deleteAll(): no bookings found");
+        else
+            Logger.info("services.BookingService.deleteAll(): deleted all " + res + " Bookings");
+        return res;
+    }
+
+    @Override
     public List<Booking> getAll() {
         Session session = JPA.em().unwrap(Session.class);
         Criteria cr = session.createCriteria(Booking.class);

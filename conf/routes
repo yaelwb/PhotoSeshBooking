@@ -19,7 +19,7 @@ GET     /bookings/byId              controllers.BookingController.getById()
 GET     /bookings/byNumTodo         controllers.BookingController.getByNumTodo()
 PUT     /bookings                   controllers.BookingController.update()
 DELETE  /bookings                   controllers.BookingController.delete()
-
+DELETE  /bookings/DeleteAll         controllers.BookingController.deleteAll()
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

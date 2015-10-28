@@ -15,6 +15,7 @@ public interface BookingService {
     Booking create(Booking inputBooking, CustomerService customerService);
     String update(Booking from, Booking to);
     int delete(Long id);
+    int deleteAll();
 
     List<Booking> getAll();
     Booking get(Long id);

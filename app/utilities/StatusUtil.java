@@ -77,7 +77,7 @@ public class StatusUtil {
 
     private static void updateMaps(State state) {
         EntityManager em = JPA.em("default");
-        Query query = em.createQuery("from Status where state =:state").setParameter("state", state.toString());
+        Query query = em.createQuery("from Status where state =:state").setParameter("state", state.toString().toUpperCase());
         Status status = (Status) query.getSingleResult();
         if (status != null) {
             statusMap.put(state, status);

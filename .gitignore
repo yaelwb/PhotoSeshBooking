@@ -7,7 +7,6 @@ target
 /.settings
 /RUNNING_PID
 activator
-test
 public
 OctVersion.zip
 project

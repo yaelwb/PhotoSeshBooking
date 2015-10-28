@@ -112,7 +112,7 @@ public class CustomerServiceImpl implements CustomerService {
         if (res == 0)
             Logger.info("services.CustomerService.deleteAll(): no customers found");
         else
-            Logger.info("services.CustomerService.deleteAll(): deleted all " + res +" customers");
+            Logger.info("services.CustomerService.deleteAll(): deleted all " + res + " customers");
         return res;
     }
 

@@ -6,6 +6,7 @@ import models.Booking;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Service;
 import play.Logger;
 import play.db.jpa.JPA;
 import utilities.RequestUtil;
@@ -20,6 +21,7 @@ import java.util.List;
 /**
  * Created by yael on 10/13/15.
  */
+@Service
 public class BookingServiceImpl implements BookingService {
 
     private final CustomerService customerService;

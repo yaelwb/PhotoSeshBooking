@@ -4,6 +4,7 @@ import enums.PayMethod;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.math.MathContext;
 
 /**
  * Created by yael on 9/28/15.
@@ -46,7 +47,7 @@ public class Customer {
         this.email = email;
         this.phone = phone;
         this.payMethod = payMethod != null? payMethod : PayMethod.CASH.toString();
-        this.balance = balance != null? balance : new BigDecimal("0.0");
+        this.balance = balance != null? balance : new BigDecimal("0.0", new MathContext(2));
     }
 
     public Long getId() {

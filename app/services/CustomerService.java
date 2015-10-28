@@ -2,6 +2,7 @@ package services;
 
 import com.google.inject.ImplementedBy;
 import models.Customer;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
 /**
  * Created by yael on 10/13/15.
  */
+@Service
 @ImplementedBy(CustomerServiceImpl.class)
 public interface CustomerService {
 
@@ -16,6 +18,7 @@ public interface CustomerService {
     String validate(Customer customer);
     void update(Customer from, Customer to);
     int delete(Long id);
+    int deleteAll();
 
     List<Customer> getAll();
     Customer get(Long id);

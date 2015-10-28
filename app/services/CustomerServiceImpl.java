@@ -4,6 +4,7 @@ import models.Customer;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Service;
 import play.Logger;
 import play.db.jpa.JPA;
 import utilities.Parse;
@@ -17,6 +18,7 @@ import java.util.List;
 /**
  * Created by yael on 10/13/15.
  */
+@Service
 public class CustomerServiceImpl implements CustomerService {
 
     private MathContext mc = new MathContext(2); // 2 precision
@@ -100,6 +102,17 @@ public class CustomerServiceImpl implements CustomerService {
             Logger.info("services.CustomerService.delete(): customer not found");
         else
             Logger.info("services.CustomerService.delete(): deleted customer " + id);
+        return res;
+    }
+
+    @Override
+    public int deleteAll() {
+        Query query = JPA.em().createQuery("DELETE Customer");
+        int res = query.executeUpdate();
+        if (res == 0)
+            Logger.info("services.CustomerService.deleteAll(): no customers found");
+        else
+            Logger.info("services.CustomerService.deleteAll(): deleted all " + res +" customers");
         return res;
     }
 

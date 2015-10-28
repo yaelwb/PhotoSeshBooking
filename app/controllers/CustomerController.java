@@ -140,4 +140,16 @@ public class CustomerController extends Controller {
         return ok("Deleted customer with id " + id);
     }
 
+    /** delete: Deletes an existing customer from the database by customer's id.
+     * DELETE request to /customers with id as a parameter.
+     * @return Result: A status message for deleting the customer, or no such customer. An error if no parameter.
+     */
+    @Transactional
+    @Security.Authenticated(ActionAuthenticator.class)
+    public Result deleteAll() {
+        int count = customerService.deleteAll();
+        if (count == 0)
+            return ok("No customers currently in the system.");
+        return ok("Deleted all " + count + " customers");
+    }
 }

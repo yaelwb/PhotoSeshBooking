@@ -1,5 +1,6 @@
+package utils;
+
 import com.fasterxml.jackson.databind.JsonNode;
-import models.Booking;
 import models.Customer;
 import play.Logger;
 import play.libs.F;
@@ -14,9 +15,9 @@ import java.util.Map;
 /**
  * Created by yael on 10/27/15.
  */
-public class GenerateRequest {
+public class GenerateCustomerRequest {
 
-    private static final int timeout = 10000;
+    private static final int timeout = 100000;
     private static final String baseUrl = "http://localhost:9000";
 
 
@@ -31,7 +32,7 @@ public class GenerateRequest {
                 .setHeader("X-AUTH-TOKEN", "WaimeaBay");
 
         F.Promise<WSResponse> responsePromise = complexRequest.post(json);
-        return responsePromise.get(timeout * 10);
+        return responsePromise.get(timeout);
     }
 
 
@@ -47,7 +48,16 @@ public class GenerateRequest {
                 .setHeader("X-AUTH-TOKEN", "WaimeaBay");
 
         F.Promise<WSResponse> responsePromise = complexRequest.put(json);
-        return responsePromise.get(timeout * 10);
+        return responsePromise.get(timeout);
+    }
+
+    public static WSResponse getAllCustomers() {
+
+        WSRequest request = WS.url(baseUrl + "/customers");
+        WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");
+
+        F.Promise<WSResponse> responsePromise = complexRequest.get();
+        return responsePromise.get(timeout);
     }
 
     public static WSResponse getCustomer(Long id) {
@@ -56,7 +66,7 @@ public class GenerateRequest {
         WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");
 
         F.Promise<WSResponse> responsePromise = complexRequest.get();
-        return responsePromise.get(timeout * 10);
+        return responsePromise.get(timeout);
     }
 
     public static WSResponse getCustomer(String firstName, String lastName) {
@@ -74,7 +84,7 @@ public class GenerateRequest {
         WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");
 
         F.Promise<WSResponse> responsePromise = complexRequest.get();
-        return responsePromise.get(timeout * 10);
+        return responsePromise.get(timeout);
     }
 
     public static WSResponse deleteCustomer(Long id) {
@@ -83,7 +93,7 @@ public class GenerateRequest {
         WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");
 
         F.Promise<WSResponse> responsePromise = complexRequest.delete();
-        return responsePromise.get(timeout * 10);
+        return responsePromise.get(timeout);
     }
 
     public static WSResponse deleteAllCustomers() {
@@ -92,31 +102,6 @@ public class GenerateRequest {
         WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");
 
         F.Promise<WSResponse> responsePromise = complexRequest.delete();
-        return responsePromise.get(timeout * 10);
-    }
-
-    //bookings
-
-    public static WSResponse createBooking(Long customerId) {
-        Map<String,Object> params = new HashMap<>();
-        params.put("customerId",customerId);
-        JsonNode json = Json.toJson(params);
-        Logger.info("createBooking with json: " + json);
-
-        WSRequest request = WS.url(baseUrl + "/bookings");
-        WSRequest complexRequest = request.setHeader("Content-Type", "application/json")
-                .setHeader("X-AUTH-TOKEN", "WaimeaBay");
-
-        F.Promise<WSResponse> responsePromise = complexRequest.post(json);
-        return responsePromise.get(timeout * 10);
-    }
-
-    public static WSResponse deleteAllBookings() {
-
-        WSRequest request = WS.url(baseUrl + "/bookings/DeleteAll");
-        WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");
-
-        F.Promise<WSResponse> responsePromise = complexRequest.delete();
-        return  responsePromise.get(timeout * 10);
+        return responsePromise.get(timeout);
     }
 }

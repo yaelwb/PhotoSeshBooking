@@ -1,4 +1,5 @@
 import com.fasterxml.jackson.databind.JsonNode;
+import enums.State;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -7,6 +8,9 @@ import org.mockito.runners.MockitoJUnitRunner;
 import play.Logger;
 import play.libs.ws.WSResponse;
 import play.test.WithServer;
+import utils.GenerateBookingRequest;
+import utils.GenerateCustomerRequest;
+
 import static org.junit.Assert.*;
 
 
@@ -18,14 +22,14 @@ public class BookingControllerTest extends WithServer {
 
     @Before
     public void setUp() {
-        GenerateRequest.deleteAllBookings();
-        GenerateRequest.deleteAllCustomers();
+        GenerateBookingRequest.deleteAllBookings();
+        GenerateCustomerRequest.deleteAllCustomers();
     }
 
     @After
     public void tearDown() {
-        GenerateRequest.deleteAllBookings();
-        GenerateRequest.deleteAllCustomers();
+        GenerateBookingRequest.deleteAllBookings();
+        GenerateCustomerRequest.deleteAllCustomers();
     }
 
     @Test
@@ -33,14 +37,14 @@ public class BookingControllerTest extends WithServer {
     public void testCreateUpdateBooking() throws Exception {
         Logger.info("BookingControllerTest.testCreateUpdateBooking");
 
-        WSResponse response = GenerateRequest.createCustomer("Renee", "Goldman", "reneeg@testmail.com", "3473473434", "cash", "55.79");
+        WSResponse response = GenerateCustomerRequest.createCustomer("Renee", "Goldman", "reneeg@testmail.com", "3473473434", "cash", "55.79");
         JsonNode node = response.asJson();
         Logger.info("testCreateUpdateBooking created customer: " + node.toString());
 
         Long id = node.findValue("id").asLong();
-        response = GenerateRequest.createBooking(id);
+        response = GenerateBookingRequest.createBooking(id);
         node = response.asJson();
         Logger.info("testCreateUpdateBooking created: " + node.toString());
-//        System.out.println("testCreateUpdateBooking created booking: " + response.getBody());
+        assertEquals(State.CREATED.toString(), node.findValue("status").asText());
     }
 }

@@ -19,7 +19,7 @@ public class Booking {
 
     public Booking(Long customerId) {
         this.customerId = customerId;
-        this.statusId = StatusUtil.getStatusId(State.CREATED.toString());
+        this.statusId = StatusUtil.getStatusId(State.CREATED.name());
     }
 
     @Id

@@ -35,7 +35,6 @@ public class GenerateCustomerRequest {
         return responsePromise.get(timeout);
     }
 
-
     public static WSResponse updateCustomer(Long id, String firstName, String lastName, String email, String phone,
                                             String payMethod, String balance) {
 
@@ -51,7 +50,16 @@ public class GenerateCustomerRequest {
         return responsePromise.get(timeout);
     }
 
-    public static WSResponse getAllCustomers() {
+    public static WSResponse getAllCustomers(Map<String, String[]> requestParams) {
+        StringBuilder url = new StringBuilder();
+        url.append(baseUrl).append("/customers");
+        if(requestParams != null && !requestParams.isEmpty()) {
+            url.append("?");
+            requestParams.forEach((k, v) ->
+                            url.append(k + "=" + v + "&")
+            );
+            url.setLength(url.length() - 1);
+        }
 
         WSRequest request = WS.url(baseUrl + "/customers");
         WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");

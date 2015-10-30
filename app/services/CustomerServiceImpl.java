@@ -165,9 +165,9 @@ public class CustomerServiceImpl implements CustomerService {
     public List<Customer> getByName(String first, String last) {
         Session session = JPA.em().unwrap(Session.class);
         Criteria cr = session.createCriteria(Customer.class);
-        if(first != null)
+        if(first != null && !first.isEmpty())
             cr.add(Restrictions.eq("firstName", first));
-        if(last != null)
+        if(last != null && !last.isEmpty())
             cr.add(Restrictions.eq("lastName", last));
         List<Customer> results = cr.list();
         if(results.isEmpty())

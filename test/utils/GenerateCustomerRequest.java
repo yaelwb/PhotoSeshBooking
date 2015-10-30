@@ -61,7 +61,7 @@ public class GenerateCustomerRequest {
             url.setLength(url.length() - 1);
         }
 
-        WSRequest request = WS.url(baseUrl + "/customers");
+        WSRequest request = WS.url(url.toString());
         WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");
 
         F.Promise<WSResponse> responsePromise = complexRequest.get();

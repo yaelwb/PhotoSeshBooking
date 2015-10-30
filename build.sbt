@@ -21,9 +21,10 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-csv" % "1.2",
   "com.google.inject" % "guice" % "4.0-beta",
   "org.mockito" % "mockito-core" % "1.10.19",
-  "org.mockito" % "mockito-all" % "1.10.19"
+  "org.mockito" % "mockito-all" % "1.10.19",
+  "org.apache.derby" % "derby" % "10.12.1.1" % "test",
+  "org.hibernate" % "hibernate-entitymanager" % "5.0.2.Final" % "test"
 )
-
 
 // Play provides two styles of routers, one expects its actions to be injected, the
 // other, legacy style, accesses its actions statically.

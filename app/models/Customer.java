@@ -108,7 +108,7 @@ public class Customer {
 
     @Override
     public String toString() {
-        return firstName + " " + lastName + ", id: " + id + " " + phone + " " + email +
-                " Balance: " + balance + " Method: " + payMethod;
+        return firstName + " " + lastName + ", ID: " + id + ", Phone: " + phone + ", Email: " + email +
+                ", Balance: " + balance + ", Method: " + payMethod;
     }
 }

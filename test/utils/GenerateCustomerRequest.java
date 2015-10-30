@@ -56,7 +56,7 @@ public class GenerateCustomerRequest {
         if(requestParams != null && !requestParams.isEmpty()) {
             url.append("?");
             requestParams.forEach((k, v) ->
-                            url.append(k + "=" + v + "&")
+                            url.append((v != null && v.length > 0) ? (k + "=" +  v[0] + "&") : "")
             );
             url.setLength(url.length() - 1);
         }

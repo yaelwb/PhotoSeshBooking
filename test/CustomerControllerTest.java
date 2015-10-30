@@ -178,11 +178,14 @@ public class CustomerControllerTest extends WithServer {
 
         Map<String, String[]> params = new HashMap<>();
         params.put("fromBalance", new String[] {"51"});
-        params.put("payMethod", new String[] {"check"});
         response = GenerateCustomerRequest.getAllCustomers(params);
         assertEquals(200, response.getStatus());
-        //TODO - debug criteria
-        //assertEquals(1, response.asJson().size());
+        assertEquals(3, response.asJson().size());
+
+        params.put("payMethod", new String[] {"Cash"});
+        response = GenerateCustomerRequest.getAllCustomers(params);
+        assertEquals(200, response.getStatus());
+        assertEquals(1, response.asJson().size());
     }
 
     @Test

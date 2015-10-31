@@ -80,3 +80,8 @@ Main functionality:
           </ul>
      </li>
 </ul>
+<i>
+The idea for this project is driven from being the 
+business-side/public-and-customer-relations/part-time-photo-editor/middle-of-the-night-photoshoot-in-the-desert-planner/occasional-figure-in-the-image 
+half of [Photo Davis](http://photodavis.org).
+</i>

@@ -186,6 +186,13 @@ public class CustomerControllerTest extends WithServer {
         response = GenerateCustomerRequest.getAllCustomers(params);
         assertEquals(200, response.getStatus());
         assertEquals(1, response.asJson().size());
+
+        params.clear();
+        params.put("fromBalance", new String[] {"51.1"});
+        params.put("toBalance", new String[] {"55.79"});
+        response = GenerateCustomerRequest.getAllCustomers(params);
+        assertEquals(200, response.getStatus());
+        assertEquals(1, response.asJson().size());
     }
 
     @Test

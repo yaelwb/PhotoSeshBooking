@@ -2,14 +2,12 @@ package utils;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import models.Customer;
-import play.Logger;
 import play.libs.F;
 import play.libs.Json;
 import play.libs.ws.*;
 import play.libs.ws.WS;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -69,7 +67,6 @@ public class GenerateCustomerRequest {
     }
 
     public static WSResponse getCustomer(Long id) {
-
         WSRequest request = WS.url(baseUrl + "/customers/byId?id=" + id);
         WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");
 
@@ -96,7 +93,6 @@ public class GenerateCustomerRequest {
     }
 
     public static WSResponse deleteCustomer(Long id) {
-
         WSRequest request = WS.url(baseUrl + "/customers?id=" + id);
         WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");
 
@@ -105,7 +101,6 @@ public class GenerateCustomerRequest {
     }
 
     public static WSResponse deleteAllCustomers() {
-
         WSRequest request = WS.url(baseUrl + "/customers/DeleteAll");
         WSRequest complexRequest = request.setHeader("X-AUTH-TOKEN", "WaimeaBay");
 

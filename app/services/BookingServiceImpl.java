@@ -318,6 +318,9 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private String review (Booking input, Booking orig) {
+        orig.setNumSelected(input.getNumSelected());
+        orig.setNumProcessed(input.getNumProcessed());
+
         String override = RequestUtil.getQueryParam("override");
         int numTodo = input.getNumSelected() - input.getNumProcessed();
         if(numTodo > 0) {

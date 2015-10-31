@@ -11,12 +11,6 @@ import play.test.WithServer;
 import utils.GenerateBookingRequest;
 import utils.GenerateCustomerRequest;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import java.sql.DriverManager;
-import java.sql.SQLNonTransientConnectionException;
-
 import static org.junit.Assert.*;
 
 
@@ -26,47 +20,16 @@ import static org.junit.Assert.*;
 @RunWith(MockitoJUnitRunner.class)
 public class BookingControllerTest extends WithServer {
 
-//    private EntityManagerFactory emFactory;
-//    private EntityManager em;
-
-
     @Before
     public void setUp() {
         GenerateBookingRequest.deleteAllBookings();
         GenerateCustomerRequest.deleteAllCustomers();
-//        try {
-//            Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
-//            DriverManager.getConnection("jdbc:derby:memory:unit-testing-jpa;create=true").close();
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//            fail("Exception during database startup.");
-//        }
-//        try {
-//            emFactory = Persistence.createEntityManagerFactory("testPU");
-//            em = emFactory.createEntityManager();
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//            fail("Exception during JPA EntityManager instanciation.");
-//        }
     }
 
     @After
     public void tearDown() throws Exception{
         GenerateBookingRequest.deleteAllBookings();
         GenerateCustomerRequest.deleteAllCustomers();
-//        if (em != null) {
-//            em.close();
-//        }
-//        if (emFactory != null) {
-//            emFactory.close();
-//        }
-//        try {
-//            DriverManager.getConnection("jdbc:derby:memory:unit-testing-jpa;shutdown=true").close();
-//        } catch (SQLNonTransientConnectionException ex) {
-//            if (ex.getErrorCode() != 45000) {
-//                throw ex;
-//            }
-//        }
     }
 
     @Test

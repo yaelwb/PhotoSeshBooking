@@ -239,7 +239,10 @@ public class CustomerControllerTest extends WithServer {
         assertEquals(200, response.getStatus());
         assertEquals(4, response.asJson().size());
 
-        GenerateCustomerRequest.deleteCustomer(id1);
+        response = GenerateCustomerRequest.deleteCustomer(id1);
+        assertEquals(200, response.getStatus());
+        response = GenerateCustomerRequest.deleteCustomer(123L);
+        assertEquals(400, response.getStatus());
         response = GenerateCustomerRequest.getAllCustomers(null);
         assertEquals(200, response.getStatus());
         assertEquals(3, response.asJson().size());

@@ -11,6 +11,8 @@ import play.test.WithServer;
 import utils.GenerateBookingRequest;
 import utils.GenerateCustomerRequest;
 
+import java.math.BigDecimal;
+
 import static org.junit.Assert.*;
 
 
@@ -34,17 +36,23 @@ public class BookingControllerTest extends WithServer {
 
     @Test
     @play.db.jpa.Transactional
-    public void testCreateUpdateBooking() throws Exception {
-        Logger.info("BookingControllerTest.testCreateUpdateBooking");
+    public void testCreateBooking() throws Exception {
+        Logger.info("BookingControllerTest.testCreateBooking");
 
-        WSResponse response = GenerateCustomerRequest.createCustomer("Renee", "Goldman", "reneeg@testmail.com", "3473473434", "cash", "55.79");
+        WSResponse response = GenerateBookingRequest.createBooking(81L);
+        assertEquals(400, response.getStatus());
+        assertEquals("A valid customer id is a mandatory field. Received: 81", response.getBody());
+
+        response = GenerateCustomerRequest.createCustomer("Renee", "Goldman", "reneeg@testmail.com", "3473473434", "cash", "55.79");
+        assertEquals(200, response.getStatus());
         JsonNode node = response.asJson();
-        Logger.info("testCreateUpdateBooking created customer: " + node.toString());
-
         Long id = node.findValue("id").asLong();
+
         response = GenerateBookingRequest.createBooking(id);
+        assertEquals(200, response.getStatus());
         node = response.asJson();
-        Logger.info("testCreateUpdateBooking created: " + node.toString());
         assertEquals(State.CREATED.toString(), node.findValue("status").asText());
+        assertEquals(new BigDecimal("0"), node.findValue("price").decimalValue());
     }
+
 }

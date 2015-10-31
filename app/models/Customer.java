@@ -95,7 +95,7 @@ public class Customer {
     }
 
     public void setPayMethod(String payMethod) {
-        this.payMethod = payMethod;
+        this.payMethod = payMethod.toUpperCase();
     }
 
     public BigDecimal getBalance() {

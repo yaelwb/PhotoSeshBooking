@@ -41,6 +41,9 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Booking booking = new Booking(customerId);
+        booking.setPrice(new BigDecimal("0"));
+        booking.setAmountPaid(new BigDecimal("0"));
+        booking.setStatusId(StatusUtil.getStatusId(State.CREATED.name()));
 
         JPA.em().persist(booking);
         Logger.info("services.BookingService.create(): Created booking " + booking.toString());

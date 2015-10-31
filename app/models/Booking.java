@@ -19,7 +19,6 @@ public class Booking {
 
     public Booking(Long customerId) {
         this.customerId = customerId;
-        this.statusId = StatusUtil.getStatusId(State.CREATED.name());
     }
 
     @Id
@@ -136,13 +135,25 @@ public class Booking {
 
     @Override
     public String toString() {
-        return "Booking{" +
-                "customerId=" + customerId +
-                ", status=" + status +
-                ", eventDate=" + eventDate +
-                ", location='" + location + '\'' +
-                ", eventType='" + eventType + '\'' +
-                '}';
+        return "id: " + id +
+                ", customer id: " + customerId +
+                ", status id: " + statusId +
+                ", status: " + this.getStatus() +
+                ((eventDate == null)? "" : ", event date: " + eventDate) +
+                ((location == null)? "" : ", location: " + location) +
+                ((eventType == null)? "" : ", event type: " + eventType) +
+                ((duration == null)? "" : ", duration: " + duration) +
+                ((price == null)? "" : ", price: " + price) +
+                ((amountPaid == null)? "" : ", amount paid: " + amountPaid) +
+                ((keyAttendees == null)? "" : ", key attendees: " + keyAttendees) +
+                ((requirements == null)? "" : ", requirements: " + requirements) +
+                ((equipment == null)? "" : ", equipment: " + equipment) +
+                ((cameraSettings == null)? "" : ", camera settings: " + cameraSettings) +
+                ((optimalLightingSpots == null)? "" : ", optimal lighting spots: " + optimalLightingSpots) +
+                ((numPics <= 0)? "" : ", num pics: " + numPics) +
+                ((numSelected <= 0)? "" : ", num selected: " + numSelected) +
+                ((numProcessed <= 0)? "" : ", num processed: " + numProcessed) +
+                ((requirements == null)? "" : ", review notes: " + reviewNotes);
     }
 
     public Timestamp getEventDate() {

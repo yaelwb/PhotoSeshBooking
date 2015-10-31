@@ -55,7 +55,7 @@ public class CustomerControllerTest extends WithServer {
         String name = node.findValue("firstName").asText();
         assertEquals("Nicholas", name);
         String pay = node.findValue("payMethod").asText();
-        assertEquals("Cash", pay);
+        assertEquals(PayMethod.CASH.toString(), pay);
     }
 
     @Test
@@ -132,10 +132,10 @@ public class CustomerControllerTest extends WithServer {
         assertEquals(200, response.getStatus());
         assertEquals(3, response.asJson().size());
 
-        params.put("payMethod", new String[] {"Cash"});
+        params.put("payMethod", new String[] {PayMethod.CASH.toString()});
         response = GenerateCustomerRequest.getAllCustomers(params);
         assertEquals(200, response.getStatus());
-        assertEquals(1, response.asJson().size());
+        assertEquals(2, response.asJson().size());
 
         params.clear();
         params.put("fromBalance", new String[] {"51.1"});
@@ -172,10 +172,16 @@ public class CustomerControllerTest extends WithServer {
         assertEquals(200, response.getStatus());
         assertEquals(10, response.asJson().size());
 
-        params.put("payMethod", new String[] {"Cash"});
+        params.put("payMethod", new String[] {"cash"});
         response = GenerateCustomerRequest.getAllCustomers(params);
         assertEquals(200, response.getStatus());
-        assertEquals(4, response.asJson().size());
+        assertEquals(9, response.asJson().size());
+        params.remove("payMethod");
+
+        params.put("payMethod", new String[] {"check"});
+        response = GenerateCustomerRequest.getAllCustomers(params);
+        assertEquals(200, response.getStatus());
+        assertEquals(5, response.asJson().size());
         params.remove("payMethod");
 
         params.put("maxItems", new String[]{"7"});

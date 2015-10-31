@@ -33,7 +33,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         Customer customer = new Customer(inputCustomer.getFirstName(), inputCustomer.getLastName(),
                 inputCustomer.getEmail(), inputCustomer.getPhone(),
-                inputCustomer.getPayMethod(), inputCustomer.getBalance());
+                inputCustomer.getPayMethod().toUpperCase(), inputCustomer.getBalance());
 
         JPA.em().persist(customer);
         Logger.info("services.CustomerService.create(): Created customer " + customer.toString());
@@ -85,7 +85,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         String payMethod = from.getPayMethod();
         if (payMethod != null)
-            to.setPayMethod(payMethod);
+            to.setPayMethod(payMethod.toUpperCase());
 
         BigDecimal balance = from.getBalance();
         if (balance != null)
@@ -131,7 +131,7 @@ public class CustomerServiceImpl implements CustomerService {
 
         String payMethod = RequestUtil.getQueryParam("payMethod");
         if(payMethod != null)
-            cr.add(Restrictions.eq("payMethod", payMethod));
+            cr.add(Restrictions.eq("payMethod", payMethod.toUpperCase()));
 
         String fromBalance = RequestUtil.getQueryParam("fromBalance");
         if(fromBalance != null)

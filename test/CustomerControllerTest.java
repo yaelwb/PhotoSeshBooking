@@ -1,7 +1,5 @@
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.inject.Inject;
-import models.Customer;
-import org.springframework.beans.factory.annotation.Autowired;
+import enums.PayMethod;
 import play.test.*;
 import play.libs.ws.*;
 import play.Logger;
@@ -9,18 +7,13 @@ import play.Logger;
 import org.junit.*;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-import services.CustomerService;
 import utils.GenerateBookingRequest;
 import utils.GenerateCustomerRequest;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import java.io.File;
 import java.math.BigDecimal;
-import java.sql.DriverManager;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
@@ -31,51 +24,16 @@ import static org.junit.Assert.*;
 @RunWith(MockitoJUnitRunner.class)
 public class CustomerControllerTest extends WithServer {
 
-//    private EntityManagerFactory emFactory;
-//    private EntityManager em;
-//
-//    @Inject
-//    CustomerService customerService;
-
     @Before
     public void setUp() {
         GenerateBookingRequest.deleteAllBookings();
         GenerateCustomerRequest.deleteAllCustomers();
-//        derby:
-//        try {
-//            Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
-//            DriverManager.getConnection("jdbc:derby:memory:unit-testing-jpa;create=true").close();
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//            fail("Exception during database startup.");
-//        }
-//        try {
-//            emFactory = Persistence.createEntityManagerFactory("testPU");
-//            em = emFactory.createEntityManager();
-//        } catch (Exception ex) {
-//            ex.printStackTrace();
-//            fail("Exception during JPA EntityManager instanciation.");
-//        }
     }
 
     @After
     public void tearDown() throws Exception{
         GenerateBookingRequest.deleteAllBookings();
         GenerateCustomerRequest.deleteAllCustomers();
-//        derby:
-//        if (em != null) {
-//            em.close();
-//        }
-//        if (emFactory != null) {
-//            emFactory.close();
-//        }
-//        try {
-//            DriverManager.getConnection("jdbc:derby:memory:unit-testing-jpa;shutdown=true").close();
-//        } catch (SQLNonTransientConnectionException ex) {
-//            if (ex.getErrorCode() != 45000) {
-//                throw ex;
-//            }
-//        }
     }
 
     @Test
@@ -148,14 +106,6 @@ public class CustomerControllerTest extends WithServer {
         response = GenerateCustomerRequest.getCustomer("Mike", "Green");
         assertEquals(200, response.getStatus());
         assertEquals("No such customers currently in the system.", response.getBody());
-
-//        em.getTransaction().begin();
-//
-//        Customer c = new Customer("A", "B", "ab@testmail.com", "3473473434", null, new BigDecimal("500"));
-//        em.persist(c);
-//        //customerService.getAll();
-//        System.out.println(em.createQuery("from CUSTOMER").executeUpdate());
-//        em.getTransaction().commit();
     }
 
     @Test
@@ -195,6 +145,56 @@ public class CustomerControllerTest extends WithServer {
         assertEquals(1, response.asJson().size());
     }
 
+
+    @Test
+    @play.db.jpa.Transactional
+    public void getAllCustomersPaginated() throws Exception{
+        Logger.info("CustomerControllerTest.getAllCustomersPaginated");
+        String[] firstNames = new String[] {"Nicholas", "Renee", "Mike", "Danny"};
+        String[] lastNames = new String[] {"Hendricks", "Goldman", "Green", "Baker", "Jones", "Lee"};
+        String[] method = new String[] {null, PayMethod.CASH.name(), PayMethod.CHECK.name(), PayMethod.PAYPAL.name(), PayMethod.SQUARE.name()};
+
+        IntStream.rangeClosed(1, 24).forEach(i -> {
+            WSResponse createResponse = GenerateCustomerRequest.createCustomer(
+                    firstNames[i%4], lastNames[i%5],
+                    firstNames[i%4].charAt(0) + lastNames[i%5].charAt(0) + "@testmail.com",
+                    "3473473434", method[i%5], Double.toString(51.3 + 5*i));
+            assertEquals(200, createResponse.getStatus());
+        });
+
+        Map<String, String[]> params = new HashMap<>();
+        WSResponse response = GenerateCustomerRequest.getAllCustomers(null);
+        assertEquals(200, response.getStatus());
+        assertEquals(24, response.asJson().size());
+
+        params.put("page", new String[]{"1"});
+        response = GenerateCustomerRequest.getAllCustomers(params);
+        assertEquals(200, response.getStatus());
+        assertEquals(10, response.asJson().size());
+
+        params.put("payMethod", new String[] {"Cash"});
+        response = GenerateCustomerRequest.getAllCustomers(params);
+        assertEquals(200, response.getStatus());
+        assertEquals(4, response.asJson().size());
+        params.remove("payMethod");
+
+        params.put("maxItems", new String[]{"7"});
+        response = GenerateCustomerRequest.getAllCustomers(params);
+        assertEquals(200, response.getStatus());
+        assertEquals(7, response.asJson().size());
+
+        params.remove("page");
+        params.put("page", new String[]{"4"});
+        response = GenerateCustomerRequest.getAllCustomers(params);
+        assertEquals(200, response.getStatus());
+        assertEquals(3, response.asJson().size());
+
+        params.remove("page");
+        params.put("page", new String[]{"5"});
+        response = GenerateCustomerRequest.getAllCustomers(params);
+        assertEquals(200, response.getStatus());
+        assertEquals("No customers currently in the system.", response.getBody());
+    }
     @Test
     @play.db.jpa.Transactional
     public void updateCustomer() throws Exception{

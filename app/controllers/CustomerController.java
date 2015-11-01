@@ -116,7 +116,7 @@ public class CustomerController extends Controller {
         Customer updatedCustomer = Json.fromJson(request().body().asJson(), Customer.class);
         Customer customer = customerService.get(updatedCustomer.getId());
         if (customer == null) {
-            return ok("No such customer currently in the system.");
+            return badRequest("No such customer currently in the system.");
         }
         customerService.update(updatedCustomer, customer);
         return ok(Json.toJson(customer));
@@ -136,7 +136,7 @@ public class CustomerController extends Controller {
         }
 
         if (customerService.delete(id) == 0)
-            return ok("No such customer currently in the system.");
+            return badRequest("No such customer currently in the system.");
         return ok("Deleted customer with id " + id);
     }
 

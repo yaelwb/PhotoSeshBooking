@@ -89,7 +89,6 @@ public class CustomerControllerTest extends WithServer {
         assertEquals(200, response.getStatus());
         assertEquals("No such customers currently in the system.", response.getBody());
 
-
         //get by name
         response = GenerateCustomerRequest.getCustomer("Renee", null);
         assertEquals(200, response.getStatus());
@@ -112,7 +111,11 @@ public class CustomerControllerTest extends WithServer {
     @play.db.jpa.Transactional
     public void getAllCustomers() throws Exception{
         Logger.info("CustomerControllerTest.getAllCustomers");
-        WSResponse response = GenerateCustomerRequest.createCustomer("Nicholas", "Hendricks", "nik@testmail.com", "3473473434", null, "51");
+        WSResponse response = GenerateCustomerRequest.getAllCustomers(null);
+        assertEquals(200, response.getStatus());
+        assertEquals("No customers currently in the system.", response.getBody());
+
+        response = GenerateCustomerRequest.createCustomer("Nicholas", "Hendricks", "nik@testmail.com", "3473473434", null, "51");
         assertEquals(200, response.getStatus());
         response = GenerateCustomerRequest.createCustomer("Renee", "Goldman", "reneeg@testmail.com", "3473473434", "check", "59.79");
         assertEquals(200, response.getStatus());
@@ -120,7 +123,6 @@ public class CustomerControllerTest extends WithServer {
         assertEquals(200, response.getStatus());
         response = GenerateCustomerRequest.createCustomer("Nicholas", "Green", "nik@testmail.com", "3473473434", null, "50");
         assertEquals(200, response.getStatus());
-
 
         response = GenerateCustomerRequest.getAllCustomers(null);
         assertEquals(200, response.getStatus());
@@ -206,7 +208,10 @@ public class CustomerControllerTest extends WithServer {
     public void updateCustomer() throws Exception{
         Logger.info("CustomerControllerTest.updateCustomer");
 
-        WSResponse response = GenerateCustomerRequest.createCustomer("Renee", "Goldman", "reneeg@testmail.com", "3473473434", "cash", "55.79");
+        WSResponse response = GenerateCustomerRequest.updateCustomer(12L, "Rina", "Goldman", "reneeg@testmail.com", "3473473434", "check", "5.79");
+        assertEquals(400, response.getStatus());
+
+        response = GenerateCustomerRequest.createCustomer("Renee", "Goldman", "reneeg@testmail.com", "3473473434", "cash", "55.79");
         assertEquals(200, response.getStatus());
         Long id = response.asJson().findValue("id").asLong();
 

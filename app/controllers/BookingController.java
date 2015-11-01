@@ -122,7 +122,7 @@ public class BookingController extends Controller {
         Booking updatedBooking = Json.fromJson(request().body().asJson(), Booking.class);
         Booking booking = bookingService.get(updatedBooking.getId());
         if (booking == null) {
-            return ok("No such booking currently in the system.");
+            return badRequest("No such booking currently in the system.");
         }
 
         if(!StatusUtil.stateChangeExists(booking.getStatus(), updatedBooking.getStatus())) {
@@ -150,7 +150,7 @@ public class BookingController extends Controller {
         }
 
         if (bookingService.delete(id) == 0)
-            return ok("No such booking currently in the system.");
+            return badRequest("No such booking currently in the system.");
         return ok("Deleted booking with id " + id);
     }
 

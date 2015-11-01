@@ -153,7 +153,9 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Customer get(Long id) {
-        Customer customer = JPA.em().find(Customer.class, id);
+        Customer customer = null;
+        if(id != null)
+            customer = JPA.em().find(Customer.class, id);
         if (customer == null)
             Logger.info("services.CustomerService.get(): customer not found");
         else

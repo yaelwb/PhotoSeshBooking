@@ -77,6 +77,7 @@ public class BookingServiceImpl implements BookingService {
         Session session = JPA.em().unwrap(Session.class);
         Criteria cr = session.createCriteria(Booking.class);
 
+        //allow filtering by several statuses
         String[] statusList = RequestUtil.getQueryParams("status");
         if(statusList != null)
             cr.add(Restrictions.in("status", statusList));
@@ -113,7 +114,9 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking get(Long id) {
-        Booking booking = JPA.em().find(Booking.class, id);
+        Booking booking = null;
+        if(id != null)
+            booking = JPA.em().find(Booking.class, id);
         if (booking == null)
             Logger.info("services.BookingService.get(): booking not found");
         else
@@ -196,7 +199,7 @@ public class BookingServiceImpl implements BookingService {
 
         //price is set. paid amount is not modified - we have downpayment state for that
         orig.setPrice(input.getPrice());
-        customerService.addToBalance(input.getCustomerId(), input.getPrice());
+        customerService.addToBalance(orig.getCustomerId(), input.getPrice());
 
         //additional info might be updated
         updateAdditionalInfo(input, orig);
@@ -217,7 +220,7 @@ public class BookingServiceImpl implements BookingService {
         //price still might be negotiated and changed during downpayment and preparation states
         if(input.getPrice() != null && !input.getPrice().equals(orig.getPrice())) {
             BigDecimal diff = input.getPrice().subtract(orig.getPrice(), mc);
-            customerService.addToBalance(input.getCustomerId(), diff);
+            customerService.addToBalance(orig.getCustomerId(), diff);
             orig.setPrice(input.getPrice());
         }
 
@@ -240,7 +243,7 @@ public class BookingServiceImpl implements BookingService {
         //last chance for price to be negotiated and changed
         if(input.getPrice() != null && !input.getPrice().equals(orig.getPrice())) {
             BigDecimal diff = input.getPrice().subtract(orig.getPrice(), mc);
-            customerService.addToBalance(input.getCustomerId(), diff);
+            customerService.addToBalance(orig.getCustomerId(), diff);
             orig.setPrice(input.getPrice());
         }
 

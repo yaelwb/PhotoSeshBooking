@@ -12,6 +12,10 @@ import utils.GenerateBookingRequest;
 import utils.GenerateCustomerRequest;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
 
@@ -57,9 +61,67 @@ public class BookingControllerTest extends WithServer {
         Logger.info("BookingControllerTest.createBooking");
         Long customerId1 = createCustomer1();
         Long customerId2 = createCustomer2();
+
+        IntStream.rangeClosed(1, 24).forEach(i -> {
+            Long customerId = (i%4 == 0) ? customerId1 : customerId2;
+            WSResponse createResponse = GenerateBookingRequest.createBooking(customerId);
+            assertEquals(200, createResponse.getStatus());
+
+            Long id = createResponse.asJson().findValue("id").asLong();
+            java.util.Date date= new java.util.Date();
+            Timestamp eventDate = new Timestamp(date.getTime());
+            String[] locations = new String[] {"Palace of the Fine Arts", "Joshua Tree", "Cliff House"};
+            String[] eventTypes = new String[] {"Underwater", "Modeling", "Nature", "Wedding", "Portrait"};
+            BigDecimal price = new BigDecimal(Double.toString(251.3 + (-5)*i));
+
+            createResponse = GenerateBookingRequest.updateBooked(id, customerId, eventDate,
+                    locations[i%3], eventTypes[i%5], null, price, null, null);
+            assertEquals(200, createResponse.getStatus());
+
+            if(i%7 == 1) {
+                createResponse = GenerateBookingRequest.updateCancel(id, customerId, null);
+                assertEquals(200, createResponse.getStatus());
+            }
+            else {
+                if (i % 2 == 0) {
+                    createResponse = GenerateBookingRequest.updateDownpayment(id, customerId,
+                            null, null, null, null, null, new BigDecimal("25"), null, null);
+                    assertEquals(200, createResponse.getStatus());
+                }
+                if (i % 4 == 0) {
+                    createResponse = GenerateBookingRequest.updatePreparation(id, customerId,
+                            null, null, null, null, null, null, null);
+                    assertEquals(200, createResponse.getStatus());
+
+                    createResponse = GenerateBookingRequest.updatePhotoshoot(id, customerId,
+                            null, null, null, null, null, null, 700);
+                    assertEquals(200, createResponse.getStatus());
+                }
+            }
+        });
+
+        WSResponse response = GenerateBookingRequest.getAllBookings(null);
+        JsonNode node = response.asJson();
+        assertEquals(24, node.size());
+        //Logger.info("BookingControllerTest.createBooking - all 24 bookings:\n" + node);
+
+
+        Map<String, String[]> params = new HashMap<>();
+        params.put("page", new String[]{"1"});
+        response = GenerateBookingRequest.getAllBookings(params);
+        assertEquals(200, response.getStatus());
+        assertEquals(10, response.asJson().size());
+
+        params.put("maxItems", new String[]{"7"});
+        response = GenerateBookingRequest.getAllBookings(params);
+        assertEquals(200, response.getStatus());
+        assertEquals(7, response.asJson().size());
+
+
         //create several, update some, get all, filter by status, date from-to, price range
-        //check pagination with/ without filters
+        //check pagination with/ without filters - add variation on event dates
         //delete all and get all - verify no bookings
+        //implement criteria of customer id
 
     }
 
@@ -118,7 +180,9 @@ public class BookingControllerTest extends WithServer {
 
         response = GenerateBookingRequest.getAllBookings(null);
         assertEquals(200, response.getStatus());
-        assertEquals(1, response.asJson().size());
+        JsonNode node = response.asJson();
+        assertEquals(1, node.size());
+        assertEquals(id1.longValue(), node.findValue("id").asLong());
 
         response = GenerateBookingRequest.deleteBooking(12L);
         assertEquals(400, response.getStatus());

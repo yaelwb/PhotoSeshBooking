@@ -126,7 +126,8 @@ public class BookingController extends Controller {
         }
 
         if(!StatusUtil.stateChangeExists(booking.getStatus(), updatedBooking.getStatus())) {
-            Logger.error("controllers.BookingController.update(): can't switch to next state");
+            Logger.error("controllers.BookingController.update(): can't switch from state " +
+                    booking.getStatus() + " to state " + updatedBooking.getStatus());
             return badRequest("No path from state " + booking.getStatus() + " to state " + updatedBooking.getStatus());
         }
         String errorMsg = bookingService.update(updatedBooking, booking);

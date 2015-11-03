@@ -5,6 +5,7 @@ import enums.State;
 import models.Booking;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.stereotype.Service;
 import play.Logger;
@@ -16,6 +17,7 @@ import javax.persistence.Query;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.sql.Timestamp;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -26,6 +28,14 @@ public class BookingServiceImpl implements BookingService {
 
     private final CustomerService customerService;
     private MathContext mc = new MathContext(2); // 2 precision
+    private LinkedList<String> orderTypes = new LinkedList<>();
+    {
+        orderTypes.add("customerId");
+        orderTypes.add("statusId");
+        orderTypes.add("eventDate");
+        orderTypes.add("eventType");
+        orderTypes.add("price");
+    }
 
     @Inject
     public BookingServiceImpl(CustomerService customerService) {
@@ -101,6 +111,22 @@ public class BookingServiceImpl implements BookingService {
         String toPrice = RequestUtil.getQueryParam("toPrice");
         if(toPrice != null)
             cr.add(Restrictions.le("price", new BigDecimal(toPrice)));
+
+        String customerId = RequestUtil.getQueryParam("customerId");
+        if(customerId != null)
+            cr.add(Restrictions.eq("customerId", new BigDecimal(customerId)));
+
+        String orderBy = RequestUtil.getQueryParam("orderBy");
+        String desc = RequestUtil.getQueryParam("orderDesc");
+
+        if(orderBy != null && orderTypes.contains(orderBy)) {
+            if(desc != null && desc.toLowerCase().equals("true"))
+                cr.addOrder(Order.desc(orderBy));
+            else
+                cr.addOrder(Order.asc(orderBy));
+        }
+        else
+            cr.addOrder(Order.asc("eventDate"));
 
         RequestUtil.paginate(cr);
         List<Booking> results = cr.list();

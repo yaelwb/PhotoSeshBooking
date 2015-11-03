@@ -1,5 +1,9 @@
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import enums.State;
+import models.Booking;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,6 +18,8 @@ import utils.GenerateCustomerRequest;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 
@@ -218,5 +224,20 @@ public class BookingControllerTest extends WithServer {
         assertEquals(200, response.getStatus());
         Long id = response.asJson().findValue("id").asLong();
         return id;
+    }
+
+    private List<Booking> extractBookingList(WSResponse response) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        List<Booking> bookings = new LinkedList<>();
+        try {
+            bookings = objectMapper
+                    .reader()
+                    .forType(new TypeReference<List<Booking>>() {})
+                    .readValue(response.asJson());
+        } catch(Exception ex) {
+            fail("Could not parse response : " + ex.getMessage());
+        }
+        return bookings;
     }
 }

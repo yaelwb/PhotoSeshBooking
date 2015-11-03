@@ -1,5 +1,9 @@
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import enums.PayMethod;
+import models.Customer;
 import play.test.*;
 import play.libs.ws.*;
 import play.Logger;
@@ -11,8 +15,7 @@ import utils.GenerateBookingRequest;
 import utils.GenerateCustomerRequest;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
@@ -157,17 +160,31 @@ public class CustomerControllerTest extends WithServer {
         String[] method = new String[] {null, PayMethod.CASH.name(), PayMethod.CHECK.name(), PayMethod.PAYPAL.name(), PayMethod.SQUARE.name()};
 
         IntStream.rangeClosed(1, 24).forEach(i -> {
+            String balance = (i%2 == 0)? Double.toString(224.3 + 5*i) : Double.toString(224.3 - 5*i);
             WSResponse createResponse = GenerateCustomerRequest.createCustomer(
                     firstNames[i%4], lastNames[i%5],
                     firstNames[i%4].charAt(0) + lastNames[i%5].charAt(0) + "@testmail.com",
-                    "3473473434", method[i%5], Double.toString(51.3 + 5*i));
+                    "3473473434", method[i%5], balance);
             assertEquals(200, createResponse.getStatus());
+            Logger.info("CustomerControllerTest.getAllCustomersPaginated created customer:\n" + createResponse.asJson());
+
         });
 
         Map<String, String[]> params = new HashMap<>();
         WSResponse response = GenerateCustomerRequest.getAllCustomers(null);
         assertEquals(200, response.getStatus());
-        assertEquals(24, response.asJson().size());
+        JsonNode node = response.asJson();
+        assertEquals(24, node.size());
+
+        params.put("orderBy", new String[]{"balance"});
+        params.put("orderDesc", new String[]{"true"});
+        response = GenerateCustomerRequest.getAllCustomers(params);
+        assertEquals(200, response.getStatus());
+
+        List<Customer> customers = extractCustomerList(response);
+        assertEquals(24, customers.size());
+        assertTrue(customers.get(0).getBalance().compareTo(customers.get(1).getBalance()) >= 0);
+        assertTrue(customers.get(5).getBalance().compareTo(customers.get(6).getBalance()) >= 0);
 
         params.put("page", new String[]{"1"});
         response = GenerateCustomerRequest.getAllCustomers(params);
@@ -175,11 +192,17 @@ public class CustomerControllerTest extends WithServer {
         assertEquals(10, response.asJson().size());
 
         params.put("payMethod", new String[] {"cash"});
+        params.remove("orderBy");
+        params.remove("orderDesc");
+        params.put("orderBy", new String[]{"firstName"});
         response = GenerateCustomerRequest.getAllCustomers(params);
         assertEquals(200, response.getStatus());
-        assertEquals(9, response.asJson().size());
-        params.remove("payMethod");
+        customers = extractCustomerList(response);
+        assertEquals(9, customers.size());
+        assertTrue(customers.get(0).getFirstName().compareTo(customers.get(1).getFirstName()) <= 0);
+        assertTrue(customers.get(5).getFirstName().compareTo(customers.get(6).getFirstName()) <= 0);
 
+        params.remove("payMethod");
         params.put("payMethod", new String[] {"check"});
         response = GenerateCustomerRequest.getAllCustomers(params);
         assertEquals(200, response.getStatus());
@@ -203,6 +226,7 @@ public class CustomerControllerTest extends WithServer {
         assertEquals(200, response.getStatus());
         assertEquals("No customers currently in the system.", response.getBody());
     }
+
     @Test
     @play.db.jpa.Transactional
     public void updateCustomer() throws Exception{
@@ -251,5 +275,20 @@ public class CustomerControllerTest extends WithServer {
         response = GenerateCustomerRequest.getAllCustomers(null);
         assertEquals(200, response.getStatus());
         assertEquals(3, response.asJson().size());
+    }
+
+    private List<Customer> extractCustomerList(WSResponse response) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        List<Customer> customers = new LinkedList<>();
+        try {
+            customers = objectMapper
+                    .reader()
+                    .forType(new TypeReference<List<Customer>>() {})
+                    .readValue(response.asJson());
+        } catch(Exception ex) {
+            fail("Could not parse response : " + ex.getMessage());
+        }
+        return customers;
     }
 }

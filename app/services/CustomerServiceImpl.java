@@ -3,7 +3,9 @@ package services;
 import models.Customer;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.mapping.Array;
 import org.springframework.stereotype.Service;
 import play.Logger;
 import play.db.jpa.JPA;
@@ -13,6 +15,9 @@ import utilities.RequestUtil;
 import javax.persistence.Query;
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -22,6 +27,14 @@ import java.util.List;
 public class CustomerServiceImpl implements CustomerService {
 
     private MathContext mc = new MathContext(2); // 2 precision
+    private LinkedList<String> orderTypes = new LinkedList<>();
+    {
+        orderTypes.add("firstName");
+        orderTypes.add("lastName");
+        orderTypes.add("payMethod");
+        orderTypes.add("balance");
+        orderTypes.add("id");
+    }
 
     @Override
     public boolean customerIdExists(Long id) {
@@ -140,6 +153,18 @@ public class CustomerServiceImpl implements CustomerService {
         String toBalance = RequestUtil.getQueryParam("toBalance");
         if(toBalance != null)
             cr.add(Restrictions.le("balance", new BigDecimal(toBalance)));
+
+        String orderBy = RequestUtil.getQueryParam("orderBy");
+        String desc = RequestUtil.getQueryParam("orderDesc");
+
+        if(orderBy != null && orderTypes.contains(orderBy)) {
+            if(desc != null && desc.toLowerCase().equals("true"))
+                cr.addOrder(Order.desc(orderBy));
+            else
+                cr.addOrder(Order.asc(orderBy));
+        }
+        else
+            cr.addOrder(Order.asc("firstName")).addOrder(Order.asc("lastName"));
 
         RequestUtil.paginate(cr);
         List<Customer> results = cr.list();

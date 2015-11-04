@@ -230,7 +230,7 @@ public class BookingControllerTest extends WithServer {
 
     @Test
     @play.db.jpa.Transactional
-    public void updateBooking() throws Exception {
+    public void updateBookingSuccessfully() throws Exception {
         Logger.info("BookingControllerTest.updateBooking");
         Long customerId = createCustomer1();
 
@@ -238,7 +238,98 @@ public class BookingControllerTest extends WithServer {
         BigDecimal balance = response.asJson().findValue("balance").decimalValue();
         assertEquals(new BigDecimal("55.79"), balance);
 
-        //create two bookings
+        //create booking
+        response = GenerateBookingRequest.createBooking(customerId);
+        assertEquals(200, response.getStatus());
+        Long id = response.asJson().findValue("id").asLong();
+
+        //update to booked
+        Timestamp eventDate = new Timestamp(dateFormat.parse("02-12-2015 10:35:42").getTime());
+
+        response = GenerateBookingRequest.updateBooked(id, customerId, eventDate,
+                "Palace of the Fine Arts", "Modeling", null, new BigDecimal("500"),
+                null, "Tango dress for retail photoshoot - " +
+                        "make sure to capture each dress from front, back, side, and during movement");
+        assertEquals(200, response.getStatus());
+
+        response = GenerateCustomerRequest.getCustomer(customerId);
+        balance = response.asJson().findValue("balance").decimalValue();
+        //assertEquals(new BigDecimal("555.79"), balance);
+
+        //update details
+        response = GenerateBookingRequest.updateBooked(id, customerId, null,
+                null, null, new BigDecimal("3"), null, "Svetlana, Denise, Bei, Fernanda", null);
+        assertEquals(200, response.getStatus());
+
+        response = GenerateBookingRequest.updateDownpayment(id, customerId, null, null, null,
+                null, null, new BigDecimal("50"), null, null);
+        assertEquals(200, response.getStatus());
+        assertEquals(State.DOWNPAYMENT.toString(), response.asJson().findValue("status").asText());
+        response = GenerateCustomerRequest.getCustomer(customerId);
+        balance = response.asJson().findValue("balance").decimalValue();
+        //assertEquals(new BigDecimal("755.79"), balance);
+
+        //pay some more
+        response = GenerateBookingRequest.updateDownpayment(id, customerId, null, null, null,
+                null, null, new BigDecimal("70"), null, null);
+        assertEquals(200, response.getStatus());
+        response = GenerateCustomerRequest.getCustomer(customerId);
+        balance = response.asJson().findValue("balance").decimalValue();
+        //assertEquals(new BigDecimal("805.79"), balance);
+
+        //prep
+        response = GenerateBookingRequest.updatePreparation(id, customerId,
+                new BigDecimal("6"), null, "Svetlana, Megan", null,
+                "Canon EF 28-135mm lens",
+                "fix saturation and white balance accordingly",
+                "about 30 feet to the right from the podium");
+        assertEquals(200, response.getStatus());
+
+        response = GenerateBookingRequest.updatePreparation(id, customerId,
+                null, null, null, null,
+                "Canon EF 28-135mm lens, tripod, flash, remote, strobe",
+                null, null);
+        assertEquals(200, response.getStatus());
+        JsonNode node = response.asJson();
+        assertEquals(State.PREPARATION.toString(), node.findValue("status").asText());
+
+        //photoshoot
+        response = GenerateBookingRequest.updatePhotoshoot(id, customerId,
+                null, null, null, null, null, null, 800);
+        assertEquals(200, response.getStatus());
+        node = response.asJson();
+        assertEquals(State.PHOTOSHOOT.toString(), node.findValue("status").asText());
+
+        //try cancel and postpone after the photoshoot.
+        response = GenerateBookingRequest.updatePostpone(id, customerId, null);
+        assertEquals(400, response.getStatus());
+        response = GenerateBookingRequest.updateCancel(id, customerId, new BigDecimal("25"));
+        assertEquals(400, response.getStatus());
+
+
+        //pay, select, edit, review, repeat, complete
+
+
+//        response = GenerateBookingRequest.updateComplete(id, customerId);
+//        assertEquals(200, response.getStatus());
+//        assertEquals(State.COMPLETE.toString(), response.asJson().findValue("status").asText());
+
+        //check the customer balance being updated
+        //get through all the legal steps with the first booking, up to completion
+    }
+
+
+    @Test
+    @play.db.jpa.Transactional
+    public void updateBookingErrors() throws Exception {
+        Logger.info("BookingControllerTest.updateBooking");
+        Long customerId = createCustomer1();
+
+        WSResponse response = GenerateCustomerRequest.getCustomer(customerId);
+        BigDecimal balance = response.asJson().findValue("balance").decimalValue();
+        assertEquals(new BigDecimal("55.79"), balance);
+
+        //create two bookings - to see the customer's balance keeps being updated
         response = GenerateBookingRequest.createBooking(customerId);
         assertEquals(200, response.getStatus());
         Long id1 = response.asJson().findValue("id").asLong();
@@ -253,7 +344,7 @@ public class BookingControllerTest extends WithServer {
         Timestamp eventDate3 = new Timestamp(dateFormat.parse("14-12-2015 10:35:42").getTime());
 
         response = GenerateBookingRequest.updateBooked(id1, customerId, eventDate1,
-                "Joshua Tree", "Modeling", null, new BigDecimal("500"), null, null);
+                "Palace of the Fine Arts", "Modeling", null, new BigDecimal("500"), null, null);
         assertEquals(200, response.getStatus());
 
         response = GenerateCustomerRequest.getCustomer(customerId);
@@ -261,7 +352,7 @@ public class BookingControllerTest extends WithServer {
         //assertEquals(new BigDecimal("555.79"), balance);
 
         response = GenerateBookingRequest.updateBooked(id2, customerId, eventDate2,
-                "Palace of the Fine Arts", "Portrait", null, new BigDecimal("200"), null, null);
+                "Cliff House", "Portrait", null, new BigDecimal("200"), null, null);
         assertEquals(200, response.getStatus());
 
         //postpone and resume booking #2
@@ -298,11 +389,10 @@ public class BookingControllerTest extends WithServer {
         balance = response.asJson().findValue("balance").decimalValue();
         //assertEquals(new BigDecimal("630.79"), balance);
 
-        //start updating both, but postpone and resume the second
-        //cancel the second with refund. check the customer balance being updated
-        //check for invalid status changes
-        //try cancel and postpone after the photoshoot.
-        //get through all the legal steps with the first booking, up to completion
+        //can't go back from canceled
+        response = GenerateBookingRequest.updateDownpayment(id2, customerId, eventDate3, null, null,
+                null, null, new BigDecimal("50"), null, null);
+        assertEquals(400, response.getStatus());
     }
 
     private Long createCustomer1() {

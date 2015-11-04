@@ -255,8 +255,11 @@ public class BookingServiceImpl implements BookingService {
         //All good, update the db entry
         updateBasicInfo(input, orig);
 
-        //price is set. paid amount is not modified - we have downpayment state for that
-        orig.setPrice(input.getPrice());
+        //price is set. input.price could be null if getting here from Booked state
+        //just to update some extra details
+        //paid amount is not modified - we have downpayment state for that
+        if (input.getPrice() != null)
+            orig.setPrice(input.getPrice());
         customerService.addToBalance(orig.getCustomerId(), input.getPrice());
 
         //additional info might be updated

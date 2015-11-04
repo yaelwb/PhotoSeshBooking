@@ -60,6 +60,9 @@ public class StatusUtil {
         stateChanges.put(State.COMPLETE,
                 new HashSet<>(Arrays.asList(new State[] {})));
 
+        stateChanges.put(State.POSTPONED,
+                new HashSet<>(Arrays.asList(new State[] {State.BOOKED, State.DOWNPAYMENT, State.PREPARATION, State.CANCELED})));
+
         //can't be resumed after cancellation
         stateChanges.put(State.CANCELED,
                 new HashSet<>(Arrays.asList(new State[] {})));

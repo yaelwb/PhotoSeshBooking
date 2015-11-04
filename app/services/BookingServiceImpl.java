@@ -32,6 +32,7 @@ public class BookingServiceImpl implements BookingService {
 
     private final CustomerService customerService;
     private MathContext mc = new MathContext(2); // 2 precision
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
     private LinkedList<String> orderTypes = new LinkedList<>();
     {
         orderTypes.add("customerId");
@@ -101,15 +102,14 @@ public class BookingServiceImpl implements BookingService {
             cr.add(Restrictions.in("statusId", statusIdList));
         }
 
+        //allow filtering by several event types
         String[] eventTypeList = RequestUtil.getQueryParams("eventType");
         if(eventTypeList != null)
             cr.add(Restrictions.in("eventType", eventTypeList));
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
         String eventDateFrom = RequestUtil.getQueryParam("eventDateFrom");
         if(eventDateFrom != null) {
-            Timestamp from = null;
-
+            Timestamp from;
             try {
                 Date date = dateFormat.parse(eventDateFrom);
                 from = new Timestamp(date.getTime());
@@ -120,8 +120,7 @@ public class BookingServiceImpl implements BookingService {
         }
         String eventDateTo = RequestUtil.getQueryParam("eventDateTo");
         if(eventDateTo != null) {
-            Timestamp to = null;
-
+            Timestamp to;
             try {
                 Date date = dateFormat.parse(eventDateTo);
                 to = new Timestamp(date.getTime());
@@ -247,6 +246,12 @@ public class BookingServiceImpl implements BookingService {
             orig.setAmountPaid(new BigDecimal(0.0));
         }
 
+        if(fromState == State.POSTPONED) {
+            if (input.getEventDate() == null && orig.getEventDate() == null)
+                return "You must set a date for the event to be resumed.";
+            orig.setEventDate(input.getEventDate());
+        }
+
         //All good, update the db entry
         updateBasicInfo(input, orig);
 
@@ -262,6 +267,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private String downpayment (Booking input, Booking orig) {
+        State fromState = StatusUtil.getState(orig.getStatus());
+        if(fromState == State.POSTPONED) {
+            if (input.getEventDate() == null && orig.getEventDate() == null)
+                return "You must set a date for the event to be resumed.";
+            orig.setEventDate(input.getEventDate());
+        }
+
         BigDecimal paid = input.getAmountPaid().subtract(orig.getAmountPaid(), mc);
         customerService.subtractFromBalance(orig.getCustomerId(), paid);
         orig.setAmountPaid(input.getAmountPaid());
@@ -282,6 +294,12 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private String preparation (Booking input, Booking orig) {
+        State fromState = StatusUtil.getState(orig.getStatus());
+        if(fromState == State.POSTPONED) {
+            if (input.getEventDate() == null && orig.getEventDate() == null)
+                return "You must set a date for the event to be resumed.";
+            orig.setEventDate(input.getEventDate());
+        }
         //basic info can no longer be updated. however additional info such as requirements can be added
         updateAdditionalInfo(input, orig);
 
@@ -398,11 +416,19 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private String cancel (Booking input, Booking orig) {
+        //might decide to refund some of the already paid amount
         BigDecimal refund = RequestUtil.getQueryParamAsBigDecimal("refund");
         if (refund != null) {
             customerService.subtractFromBalance(orig.getCustomerId(), refund);
         }
 
+        //remove the amount remained to pay from the balance - if not null
+        BigDecimal diff = new BigDecimal("0");
+        if(orig.getPrice() != null)
+            diff.add(orig.getPrice(), mc);
+        if(orig.getAmountPaid() != null)
+            diff.add(orig.getAmountPaid(), mc);
+        customerService.subtractFromBalance(orig.getCustomerId(), diff);
         orig.setStatus(State.CANCELED.toString());
         return null;
     }

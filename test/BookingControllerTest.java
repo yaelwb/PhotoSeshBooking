@@ -30,6 +30,7 @@ import static org.junit.Assert.*;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class BookingControllerTest extends WithServer {
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
 
     @Before
     public void setUp() {
@@ -231,15 +232,77 @@ public class BookingControllerTest extends WithServer {
     @play.db.jpa.Transactional
     public void updateBooking() throws Exception {
         Logger.info("BookingControllerTest.updateBooking");
-        Long customerId1 = createCustomer1();
-        Long customerId2 = createCustomer2();
+        Long customerId = createCustomer1();
 
-        //make 2 bookings
+        WSResponse response = GenerateCustomerRequest.getCustomer(customerId);
+        BigDecimal balance = response.asJson().findValue("balance").decimalValue();
+        assertEquals(new BigDecimal("55.79"), balance);
+
+        //create two bookings
+        response = GenerateBookingRequest.createBooking(customerId);
+        assertEquals(200, response.getStatus());
+        Long id1 = response.asJson().findValue("id").asLong();
+
+        response = GenerateBookingRequest.createBooking(customerId);
+        assertEquals(200, response.getStatus());
+        Long id2 = response.asJson().findValue("id").asLong();
+
+        //update to booked
+        Timestamp eventDate1 = new Timestamp(dateFormat.parse("02-12-2015 10:35:42").getTime());
+        Timestamp eventDate2 = new Timestamp(dateFormat.parse("07-12-2015 10:35:42").getTime());
+        Timestamp eventDate3 = new Timestamp(dateFormat.parse("14-12-2015 10:35:42").getTime());
+
+        response = GenerateBookingRequest.updateBooked(id1, customerId, eventDate1,
+                "Joshua Tree", "Modeling", null, new BigDecimal("500"), null, null);
+        assertEquals(200, response.getStatus());
+
+        response = GenerateCustomerRequest.getCustomer(customerId);
+        balance = response.asJson().findValue("balance").decimalValue();
+        //assertEquals(new BigDecimal("555.79"), balance);
+
+        response = GenerateBookingRequest.updateBooked(id2, customerId, eventDate2,
+                "Palace of the Fine Arts", "Portrait", null, new BigDecimal("200"), null, null);
+        assertEquals(200, response.getStatus());
+
+        //postpone and resume booking #2
+        response = GenerateBookingRequest.updatePostpone(id2, customerId, null);
+        assertEquals(200, response.getStatus());
+        assertEquals(State.POSTPONED.toString(), response.asJson().findValue("status").asText());
+
+        //illegal state change
+        response = GenerateBookingRequest.updateComplete(id2, customerId);
+        assertEquals(400, response.getStatus());
+
+        //new date is missing
+        response = GenerateBookingRequest.updateDownpayment(id2, customerId, null, null, null,
+                null, null, null, null, null);
+        assertEquals(400, response.getStatus());
+        response = GenerateCustomerRequest.getCustomer(customerId);
+        balance = response.asJson().findValue("balance").decimalValue();
+        //assertEquals(new BigDecimal("755.79"), balance);
+
+        //new date
+        response = GenerateBookingRequest.updateDownpayment(id2, customerId, eventDate3, null, null,
+                null, null, new BigDecimal("50"), null, null);
+        assertEquals(200, response.getStatus());
+        assertEquals(State.DOWNPAYMENT.toString(), response.asJson().findValue("status").asText());
+        response = GenerateCustomerRequest.getCustomer(customerId);
+        balance = response.asJson().findValue("balance").decimalValue();
+        //assertEquals(new BigDecimal("805.79"), balance);
+
+        //cancel
+        response = GenerateBookingRequest.updateCancel(id2, customerId, new BigDecimal("25"));
+        assertEquals(200, response.getStatus());
+        assertEquals(State.CANCELED.toString(), response.asJson().findValue("status").asText());
+        response = GenerateCustomerRequest.getCustomer(customerId);
+        balance = response.asJson().findValue("balance").decimalValue();
+        //assertEquals(new BigDecimal("630.79"), balance);
+
         //start updating both, but postpone and resume the second
         //cancel the second with refund. check the customer balance being updated
         //check for invalid status changes
-        //check that get all with filter by status works
         //try cancel and postpone after the photoshoot.
+        //get through all the legal steps with the first booking, up to completion
     }
 
     private Long createCustomer1() {
@@ -260,52 +323,47 @@ public class BookingControllerTest extends WithServer {
     //updates ned to take place in order to be able to check status filtering
     private void generateBookings(Long customerId1, Long customerId2) {
         IntStream.rangeClosed(1, 24).forEach(i -> {
-            Long customerId = (i%4 == 0) ? customerId1 : customerId2;
-            WSResponse createResponse = GenerateBookingRequest.createBooking(customerId);
-            assertEquals(200, createResponse.getStatus());
+            Long customerId = (i % 4 == 0) ? customerId1 : customerId2;
+            WSResponse response = GenerateBookingRequest.createBooking(customerId);
+            assertEquals(200, response.getStatus());
+            Long id = response.asJson().findValue("id").asLong();
 
-            Long id = createResponse.asJson().findValue("id").asLong();
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
-
-            String[] dateStrings = new String[] {"02-12-2015 10:35:42", "02-11-2015 18:35:42",
-                    "02-12-2015 18:00:42", "02-11-2015 18:00:42","02-04-2016 18:35:42", "03-04-2016 18:35:42",
-                    "02-12-2015 10:35:42", "02-11-2015 8:35:42","02-04-2016 9:35:42", "03-04-2016 18:00:42"};
+            String[] dateStrings = new String[]{"02-12-2015 10:35:42", "02-11-2015 18:35:42",
+                    "02-12-2015 18:00:42", "02-11-2015 18:00:42", "02-04-2016 18:35:42", "03-04-2016 18:35:42",
+                    "02-12-2015 10:35:42", "02-11-2015 8:35:42", "02-04-2016 9:35:42", "03-04-2016 18:00:42"};
             Timestamp eventDate = null;
 
             try {
-                String str = dateStrings[i%10];
-                Date date = dateFormat.parse(str);
-                eventDate = new Timestamp(date.getTime());
+                eventDate = new Timestamp(dateFormat.parse(dateStrings[i % 10]).getTime());
             } catch (ParseException e) {
                 eventDate = new Timestamp(new java.util.Date().getTime());
             }
 
-            String[] locations = new String[] {"Palace of the Fine Arts", "Joshua Tree", "Cliff House"};
-            String[] eventTypes = new String[] {"Underwater", "Modeling", "Nature", "Wedding", "Portrait"};
-            BigDecimal price = new BigDecimal(Double.toString(251.3 + (-5)*i));
+            String[] locations = new String[]{"Palace of the Fine Arts", "Joshua Tree", "Cliff House"};
+            String[] eventTypes = new String[]{"Underwater", "Modeling", "Nature", "Wedding", "Portrait"};
+            BigDecimal price = new BigDecimal(Double.toString(251.3 + (-5) * i));
 
-            createResponse = GenerateBookingRequest.updateBooked(id, customerId, eventDate,
-                    locations[i%3], eventTypes[i%5], null, price, null, null);
-            assertEquals(200, createResponse.getStatus());
+            response = GenerateBookingRequest.updateBooked(id, customerId, eventDate,
+                    locations[i % 3], eventTypes[i % 5], null, price, null, null);
+            assertEquals(200, response.getStatus());
 
-            if(i%7 == 1) {
-                createResponse = GenerateBookingRequest.updateCancel(id, customerId, null);
-                assertEquals(200, createResponse.getStatus());
-            }
-            else {
+            if (i % 7 == 1) {
+                response = GenerateBookingRequest.updateCancel(id, customerId, null);
+                assertEquals(200, response.getStatus());
+            } else {
                 if (i % 2 == 0) {
-                    createResponse = GenerateBookingRequest.updateDownpayment(id, customerId,
+                    response = GenerateBookingRequest.updateDownpayment(id, customerId,
                             null, null, null, null, null, new BigDecimal("25"), null, null);
-                    assertEquals(200, createResponse.getStatus());
+                    assertEquals(200, response.getStatus());
                 }
                 if (i % 4 == 0) {
-                    createResponse = GenerateBookingRequest.updatePreparation(id, customerId,
+                    response = GenerateBookingRequest.updatePreparation(id, customerId,
                             null, null, null, null, null, null, null);
-                    assertEquals(200, createResponse.getStatus());
+                    assertEquals(200, response.getStatus());
 
-                    createResponse = GenerateBookingRequest.updatePhotoshoot(id, customerId,
+                    response = GenerateBookingRequest.updatePhotoshoot(id, customerId,
                             null, null, null, null, null, null, 700);
-                    assertEquals(200, createResponse.getStatus());
+                    assertEquals(200, response.getStatus());
                 }
             }
         });

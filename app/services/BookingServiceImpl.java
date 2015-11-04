@@ -17,6 +17,10 @@ import javax.persistence.Query;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.sql.Timestamp;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -89,20 +93,43 @@ public class BookingServiceImpl implements BookingService {
 
         //allow filtering by several statuses
         String[] statusList = RequestUtil.getQueryParams("status");
-        if(statusList != null)
-            cr.add(Restrictions.in("status", statusList));
+        if(statusList != null) {
+            Long[] statusIdList = new Long[statusList.length];
+            int i=0;
+            for(String s: statusList)
+                statusIdList[i++] = StatusUtil.getStatusId(s);
+            cr.add(Restrictions.in("statusId", statusIdList));
+        }
 
-        String eventType = RequestUtil.getQueryParam("eventType");
-        if(eventType != null)
-            cr.add(Restrictions.eq("eventType", eventType));
+        String[] eventTypeList = RequestUtil.getQueryParams("eventType");
+        if(eventTypeList != null)
+            cr.add(Restrictions.in("eventType", eventTypeList));
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
         String eventDateFrom = RequestUtil.getQueryParam("eventDateFrom");
-        if(eventDateFrom != null)
-            cr.add(Restrictions.ge("eventDate", Timestamp.valueOf(eventDateFrom)));
+        if(eventDateFrom != null) {
+            Timestamp from = null;
 
+            try {
+                Date date = dateFormat.parse(eventDateFrom);
+                from = new Timestamp(date.getTime());
+            } catch (ParseException e) {
+                from = new Timestamp(new java.util.Date().getTime());
+            }
+            cr.add(Restrictions.ge("eventDate", from));
+        }
         String eventDateTo = RequestUtil.getQueryParam("eventDateTo");
-        if(eventDateTo != null)
-            cr.add(Restrictions.le("eventDate", Timestamp.valueOf(eventDateTo)));
+        if(eventDateTo != null) {
+            Timestamp to = null;
+
+            try {
+                Date date = dateFormat.parse(eventDateTo);
+                to = new Timestamp(date.getTime());
+            } catch (ParseException e) {
+                to = new Timestamp(new java.util.Date().getTime());
+            }
+            cr.add(Restrictions.le("eventDate", to));
+        }
 
         String fromPrice = RequestUtil.getQueryParam("fromPrice");
         if(fromPrice != null)
@@ -114,7 +141,7 @@ public class BookingServiceImpl implements BookingService {
 
         String customerId = RequestUtil.getQueryParam("customerId");
         if(customerId != null)
-            cr.add(Restrictions.eq("customerId", new BigDecimal(customerId)));
+            cr.add(Restrictions.eq("customerId", Long.parseLong(customerId)));
 
         String orderBy = RequestUtil.getQueryParam("orderBy");
         String desc = RequestUtil.getQueryParam("orderDesc");
@@ -126,7 +153,7 @@ public class BookingServiceImpl implements BookingService {
                 cr.addOrder(Order.asc(orderBy));
         }
         else
-            cr.addOrder(Order.asc("eventDate"));
+            cr.addOrder(Order.asc("statusId"));
 
         RequestUtil.paginate(cr);
         List<Booking> results = cr.list();

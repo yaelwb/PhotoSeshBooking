@@ -59,7 +59,7 @@ public class BookingController extends Controller {
         List<Booking> l = bookingService.getAll();
 
         if (l == null || l.isEmpty()) {
-            return ok("No bookings currently in the system.");
+            return ok("No such bookings currently in the system.");
         }
         return ok(Json.toJson(l));
     }

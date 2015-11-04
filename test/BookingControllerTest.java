@@ -17,10 +17,9 @@ import utils.GenerateCustomerRequest;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.*;
@@ -64,77 +63,108 @@ public class BookingControllerTest extends WithServer {
     @Test
     @play.db.jpa.Transactional
     public void getAllBookings() throws Exception {
-        Logger.info("BookingControllerTest.createBooking");
+        Logger.info("BookingControllerTest.getAllBookings");
         Long customerId1 = createCustomer1();
         Long customerId2 = createCustomer2();
 
-        IntStream.rangeClosed(1, 24).forEach(i -> {
-            Long customerId = (i%4 == 0) ? customerId1 : customerId2;
-            WSResponse createResponse = GenerateBookingRequest.createBooking(customerId);
-            assertEquals(200, createResponse.getStatus());
-
-            Long id = createResponse.asJson().findValue("id").asLong();
-            java.util.Date date= new java.util.Date();
-            Timestamp eventDate = new Timestamp(date.getTime());
-            String[] locations = new String[] {"Palace of the Fine Arts", "Joshua Tree", "Cliff House"};
-            String[] eventTypes = new String[] {"Underwater", "Modeling", "Nature", "Wedding", "Portrait"};
-            BigDecimal price = new BigDecimal(Double.toString(251.3 + (-5)*i));
-
-            createResponse = GenerateBookingRequest.updateBooked(id, customerId, eventDate,
-                    locations[i%3], eventTypes[i%5], null, price, null, null);
-            assertEquals(200, createResponse.getStatus());
-
-            if(i%7 == 1) {
-                createResponse = GenerateBookingRequest.updateCancel(id, customerId, null);
-                assertEquals(200, createResponse.getStatus());
-            }
-            else {
-                if (i % 2 == 0) {
-                    createResponse = GenerateBookingRequest.updateDownpayment(id, customerId,
-                            null, null, null, null, null, new BigDecimal("25"), null, null);
-                    assertEquals(200, createResponse.getStatus());
-                }
-                if (i % 4 == 0) {
-                    createResponse = GenerateBookingRequest.updatePreparation(id, customerId,
-                            null, null, null, null, null, null, null);
-                    assertEquals(200, createResponse.getStatus());
-
-                    createResponse = GenerateBookingRequest.updatePhotoshoot(id, customerId,
-                            null, null, null, null, null, null, 700);
-                    assertEquals(200, createResponse.getStatus());
-                }
-            }
-        });
-
-        WSResponse response = GenerateBookingRequest.getAllBookings(null);
-        JsonNode node = response.asJson();
-        assertEquals(24, node.size());
-        //Logger.info("BookingControllerTest.createBooking - all 24 bookings:\n" + node);
-
-
         Map<String, String[]> params = new HashMap<>();
+        WSResponse response = GenerateBookingRequest.getAllBookings(params);
+        assertEquals(200, response.getStatus());
+        assertEquals("No such bookings currently in the system.", response.getBody());
+
+        //generate 24 bookings with different customer ids, prices,
+        //event types and locations, and update some to different statuses
+        generateBookings(customerId1, customerId2);
+
+        response = GenerateBookingRequest.getAllBookings(null);
+        List<Booking> bookings = extractBookingList(response);
+        assertEquals(24, bookings.size());
+
+        //check pagination
         params.put("page", new String[]{"1"});
         response = GenerateBookingRequest.getAllBookings(params);
         assertEquals(200, response.getStatus());
         assertEquals(10, response.asJson().size());
 
         params.put("maxItems", new String[]{"7"});
+        params.remove("page");
+        params.put("page", new String[]{"4"});
         response = GenerateBookingRequest.getAllBookings(params);
         assertEquals(200, response.getStatus());
-        assertEquals(7, response.asJson().size());
+        assertEquals(3, response.asJson().size());
 
+        //check sorting by price
+        params.remove("page");
+        params.put("page", new String[]{"1"});
+        params.put("orderBy", new String[]{"price"});
+        response = GenerateBookingRequest.getAllBookings(params);
+        assertEquals(200, response.getStatus());
+        bookings = extractBookingList(response);
+        assertEquals(7, bookings.size());
+        assertEquals(new BigDecimal("131.3"),bookings.get(0).getPrice());
+        assertEquals(new BigDecimal("156.3"), bookings.get(5).getPrice());
+        assertEquals(new BigDecimal("161.3"), bookings.get(6).getPrice());
 
-        //create several, update some, get all, filter by status, date from-to, price range
-        //check pagination with/ without filters - add variation on event dates
+        //check filter by customer id
+        params.remove("page");
+        params.put("customerId", new String[]{customerId2.toString()});
+        response = GenerateBookingRequest.getAllBookings(params);
+        bookings = extractBookingList(response);
+        assertEquals(200, response.getStatus());
+        assertEquals(18, bookings.size());
+
+        params.put("fromPrice", new String[]{"150"});
+        params.put("toPrice", new String[]{"200"});
+        response = GenerateBookingRequest.getAllBookings(params);
+        bookings = extractBookingList(response);
+        assertEquals(200, response.getStatus());
+        assertEquals(7, bookings.size());
+        assertEquals(new BigDecimal("156.3"), bookings.get(0).getPrice());
+        assertEquals(new BigDecimal("196.3"), bookings.get(6).getPrice());
+
+        params.put("eventType", new String[]{"Portrait", "Wedding"});
+        response = GenerateBookingRequest.getAllBookings(params);
+        bookings = extractBookingList(response);
+        assertEquals(200, response.getStatus());
+        assertEquals(4, bookings.size());
+
+        params.clear();
+        params.put("status", new String[]{"DOWNPAYMENT", "CANCELED"});
+        response = GenerateBookingRequest.getAllBookings(params);
+        bookings = extractBookingList(response);
+        assertEquals(200, response.getStatus());
+        assertEquals(9, bookings.size());
+
+        params.clear();
+        params.put("customerId", new String[]{"8989"});
+        response = GenerateBookingRequest.getAllBookings(params);
+        assertEquals(200, response.getStatus());
+        assertEquals("No such bookings currently in the system.", response.getBody());
+        params.remove("customerId");
+
+        //filter and sort by event dates
+        params.put("eventDateFrom", new String[]{"02-12-2015%2010:35:42"});
+        params.put("eventDateTo", new String[]{"02-04-2016%2018:40:42"});
+        params.put("orderBy", new String[]{"eventDate"});
+        response = GenerateBookingRequest.getAllBookings(params);
+        bookings = extractBookingList(response);
+        assertEquals(200, response.getStatus());
+        assertEquals(12, bookings.size());
+        assertEquals("2015-12-02 10:35:42.0", bookings.get(0).getEventDate().toString());
+        assertEquals("2016-04-02 18:35:42.0", bookings.get(11).getEventDate().toString());
+
         //delete all and get all - verify no bookings
-        //implement criteria of customer id
-
+        response = GenerateBookingRequest.deleteAllBookings();
+        assertEquals(200, response.getStatus());
+        response = GenerateBookingRequest.getAllBookings(null);
+        assertEquals(200, response.getStatus());
+        assertEquals("No such bookings currently in the system.", response.getBody());
     }
 
     @Test
     @play.db.jpa.Transactional
     public void getBooking() throws Exception {
-        Logger.info("BookingControllerTest.createBooking");
+        Logger.info("BookingControllerTest.getBooking");
         Long customerId1 = createCustomer1();
         Long customerId2 = createCustomer2();
 
@@ -165,7 +195,7 @@ public class BookingControllerTest extends WithServer {
     @Test
     @play.db.jpa.Transactional
     public void deleteBooking() throws Exception {
-        Logger.info("BookingControllerTest.createBooking");
+        Logger.info("BookingControllerTest.deleteBooking");
         Long customerId1 = createCustomer1();
         Long customerId2 = createCustomer2();
 
@@ -200,7 +230,7 @@ public class BookingControllerTest extends WithServer {
     @Test
     @play.db.jpa.Transactional
     public void updateBooking() throws Exception {
-        Logger.info("BookingControllerTest.createBooking");
+        Logger.info("BookingControllerTest.updateBooking");
         Long customerId1 = createCustomer1();
         Long customerId2 = createCustomer2();
 
@@ -224,6 +254,61 @@ public class BookingControllerTest extends WithServer {
         assertEquals(200, response.getStatus());
         Long id = response.asJson().findValue("id").asLong();
         return id;
+    }
+
+    //create booking with different data for sorting and filtering checks
+    //updates ned to take place in order to be able to check status filtering
+    private void generateBookings(Long customerId1, Long customerId2) {
+        IntStream.rangeClosed(1, 24).forEach(i -> {
+            Long customerId = (i%4 == 0) ? customerId1 : customerId2;
+            WSResponse createResponse = GenerateBookingRequest.createBooking(customerId);
+            assertEquals(200, createResponse.getStatus());
+
+            Long id = createResponse.asJson().findValue("id").asLong();
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
+
+            String[] dateStrings = new String[] {"02-12-2015 10:35:42", "02-11-2015 18:35:42",
+                    "02-12-2015 18:00:42", "02-11-2015 18:00:42","02-04-2016 18:35:42", "03-04-2016 18:35:42",
+                    "02-12-2015 10:35:42", "02-11-2015 8:35:42","02-04-2016 9:35:42", "03-04-2016 18:00:42"};
+            Timestamp eventDate = null;
+
+            try {
+                String str = dateStrings[i%10];
+                Date date = dateFormat.parse(str);
+                eventDate = new Timestamp(date.getTime());
+            } catch (ParseException e) {
+                eventDate = new Timestamp(new java.util.Date().getTime());
+            }
+
+            String[] locations = new String[] {"Palace of the Fine Arts", "Joshua Tree", "Cliff House"};
+            String[] eventTypes = new String[] {"Underwater", "Modeling", "Nature", "Wedding", "Portrait"};
+            BigDecimal price = new BigDecimal(Double.toString(251.3 + (-5)*i));
+
+            createResponse = GenerateBookingRequest.updateBooked(id, customerId, eventDate,
+                    locations[i%3], eventTypes[i%5], null, price, null, null);
+            assertEquals(200, createResponse.getStatus());
+
+            if(i%7 == 1) {
+                createResponse = GenerateBookingRequest.updateCancel(id, customerId, null);
+                assertEquals(200, createResponse.getStatus());
+            }
+            else {
+                if (i % 2 == 0) {
+                    createResponse = GenerateBookingRequest.updateDownpayment(id, customerId,
+                            null, null, null, null, null, new BigDecimal("25"), null, null);
+                    assertEquals(200, createResponse.getStatus());
+                }
+                if (i % 4 == 0) {
+                    createResponse = GenerateBookingRequest.updatePreparation(id, customerId,
+                            null, null, null, null, null, null, null);
+                    assertEquals(200, createResponse.getStatus());
+
+                    createResponse = GenerateBookingRequest.updatePhotoshoot(id, customerId,
+                            null, null, null, null, null, null, 700);
+                    assertEquals(200, createResponse.getStatus());
+                }
+            }
+        });
     }
 
     private List<Booking> extractBookingList(WSResponse response) {

@@ -42,9 +42,13 @@ public class GenerateBookingRequest {
         url.append(baseUrl).append("/bookings");
         if(requestParams != null && !requestParams.isEmpty()) {
             url.append("?");
-            requestParams.forEach((k, v) ->
-                            url.append((v != null && v.length > 0) ? (k + "=" +  v[0] + "&") : "")
-            );
+            for (String key : requestParams.keySet()) {
+                String[] values = requestParams.get(key);
+                if(values != null && values.length > 0) {
+                    for(String val: values)
+                        url.append(key + "=" + val + "&");
+                }
+            }
             url.setLength(url.length() - 1);
         }
 

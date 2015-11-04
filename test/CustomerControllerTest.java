@@ -163,7 +163,7 @@ public class CustomerControllerTest extends WithServer {
             String balance = (i%2 == 0)? Double.toString(224.3 + 5*i) : Double.toString(224.3 - 5*i);
             WSResponse createResponse = GenerateCustomerRequest.createCustomer(
                     firstNames[i%4], lastNames[i%5],
-                    firstNames[i%4].charAt(0) + lastNames[i%5].charAt(0) + "@testmail.com",
+                    firstNames[i%4] + "." + lastNames[i%5] + "@testmail.com",
                     "3473473434", method[i%5], balance);
             assertEquals(200, createResponse.getStatus());
             Logger.info("CustomerControllerTest.getAllCustomersPaginated created customer:\n" + createResponse.asJson());
@@ -210,9 +210,12 @@ public class CustomerControllerTest extends WithServer {
         params.remove("payMethod");
 
         params.put("maxItems", new String[]{"7"});
+        params.put("orderBy", new String[]{"payMethod"});
         response = GenerateCustomerRequest.getAllCustomers(params);
-        assertEquals(200, response.getStatus());
-        assertEquals(7, response.asJson().size());
+        customers = extractCustomerList(response);
+        assertEquals(7, customers.size());
+        assertTrue(customers.get(0).getPayMethod().compareTo(customers.get(1).getPayMethod()) <= 0);
+        assertTrue(customers.get(3).getPayMethod().compareTo(customers.get(4).getPayMethod()) <= 0);
 
         params.remove("page");
         params.put("page", new String[]{"4"});

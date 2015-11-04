@@ -1,7 +1,10 @@
 package utilities;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Map;
+
+import play.Logger;
 import play.Play;
 import play.mvc.Controller;
 import org.hibernate.Criteria;
@@ -37,6 +40,7 @@ public class RequestUtil extends Controller {
      */
     public static String[] getQueryParams(String field) {
         Map<String, String[]> requestString = request().queryString();
+
         if(requestString == null || requestString.isEmpty())
             return null;
         String[] params = requestString.get(field);

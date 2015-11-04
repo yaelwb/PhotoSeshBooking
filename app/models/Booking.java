@@ -1,7 +1,6 @@
 package models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import enums.State;
 import utilities.StatusUtil;
 
 import javax.persistence.*;
@@ -135,7 +134,7 @@ public class Booking {
 
     @Override
     public String toString() {
-        return "id: " + id +
+        return "{id: " + id +
                 ", customer id: " + customerId +
                 ", status id: " + statusId +
                 ", status: " + this.getStatus() +
@@ -153,7 +152,7 @@ public class Booking {
                 ((numPics <= 0)? "" : ", num pics: " + numPics) +
                 ((numSelected <= 0)? "" : ", num selected: " + numSelected) +
                 ((numProcessed <= 0)? "" : ", num processed: " + numProcessed) +
-                ((requirements == null)? "" : ", review notes: " + reviewNotes);
+                ((requirements == null)? "" : ", review notes: " + reviewNotes) +"}";
     }
 
     public Timestamp getEventDate() {

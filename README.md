@@ -15,6 +15,13 @@ Main functionality:
 <br>
 [app/services/CustomerServiceImpl.java](app/services/CustomerServiceImpl.java)
 <br>
+[app/utilities/StatusUtil.java](State machine implementation: app/utilities/StatusUtil.java)
+<br>
+Test:
+<br>
+[test/CustomerControllerTest.java](test/CustomerControllerTest.java)
+[test/BookingControllerTest.java](test/BookingControllerTest.java)
+<br>
 <ul>
      <li><b>POST    /customers </b>Create a customer</li>
      <li><b>GET     /customers </b>View all customers - with filters</li>

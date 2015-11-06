@@ -1,10 +1,8 @@
 package utilities;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.Map;
 
-import play.Logger;
 import play.Play;
 import play.mvc.Controller;
 import org.hibernate.Criteria;

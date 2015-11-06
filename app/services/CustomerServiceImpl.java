@@ -5,7 +5,6 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.mapping.Array;
 import org.springframework.stereotype.Service;
 import play.Logger;
 import play.db.jpa.JPA;
@@ -14,9 +13,6 @@ import utilities.RequestUtil;
 
 import javax.persistence.Query;
 import java.math.BigDecimal;
-import java.math.MathContext;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -26,7 +22,6 @@ import java.util.List;
 @Service
 public class CustomerServiceImpl implements CustomerService {
 
-    private MathContext mc = new MathContext(2); // 2 precision
     private LinkedList<String> orderTypes = new LinkedList<>();
     {
         orderTypes.add("firstName");
@@ -208,14 +203,14 @@ public class CustomerServiceImpl implements CustomerService {
     public void addToBalance(Long id, BigDecimal balance) {
         Customer customer = get(id);
         if(customer != null && balance != null)
-            customer.setBalance(balance.add(customer.getBalance(), mc));
+            customer.setBalance(customer.getBalance().add(balance));
     }
 
     @Override
     public void subtractFromBalance(Long id, BigDecimal balance) {
         Customer customer = get(id);
         if(customer != null && balance != null)
-            customer.setBalance(balance.subtract(customer.getBalance(), mc));
+            customer.setBalance(customer.getBalance().subtract(balance));
     }
 }
 

@@ -1,7 +1,7 @@
 package controllers;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
-import enums.State;
 import models.Booking;
 import play.Logger;
 import play.db.jpa.Transactional;

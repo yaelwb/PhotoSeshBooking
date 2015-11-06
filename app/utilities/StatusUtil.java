@@ -23,6 +23,8 @@ public class StatusUtil {
     private static Map<State, Set<State>> stateChanges = new HashMap<>();
 
     static {
+        initMaps();
+
         //either booked or cancelled. can't postpone as no date is set yet
         stateChanges.put(State.CREATED,
                 new HashSet<>(Arrays.asList(new State[] {State.BOOKED, State.CANCELED})));
@@ -78,9 +80,10 @@ public class StatusUtil {
         return Enum.valueOf(State.class, str);
     }
 
+    //in case a new status will be introduced in the db
     private static void updateMaps(State state) {
         EntityManager em = JPA.em("default");
-        Query query = em.createQuery("from Status where state =:state").setParameter("state", state.toString().toUpperCase());
+        Query query = em.createQuery("from Status where state like :state").setParameter("state", state.toString().toUpperCase());
         Status status = (Status) query.getSingleResult();
         if (status != null) {
             statusMap.put(state, status);
@@ -121,5 +124,16 @@ public class StatusUtil {
             return status.getDescription();
         }
         return null;
+    }
+
+    private static void initMaps() {
+        EntityManager em = JPA.em("default");
+        Query query = em.createQuery("from Status");
+        List<Status> statusList = query.getResultList();
+        for (Status status :statusList) {
+            statusMap.put(getState(status.getState()), status);
+            statusIdMap.put(getState(status.getState()), status.getId());
+            idStatusMap.put(status.getId(), status);
+        }
     }
  }

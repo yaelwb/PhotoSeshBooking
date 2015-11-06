@@ -1,4 +1,4 @@
-CREATE TABLE customer
+CREATE TABLE IF NOT EXISTS customer
 (         
 	id BIGSERIAL PRIMARY KEY NOT NULL,   
 	first_name VARCHAR(30) NOT NULL, 
@@ -11,14 +11,14 @@ CREATE TABLE customer
 
 ALTER SEQUENCE customer_id_seq RESTART WITH 41000;
 
-CREATE TABLE status
+CREATE TABLE IF NOT EXISTS status
 (
     id BIGSERIAL PRIMARY KEY NOT NULL,
     state VARCHAR(40) NOT NULL,
     description VARCHAR(255)
 );
 
-CREATE TABLE booking 
+CREATE TABLE IF NOT EXISTS booking
 (         
 	id BIGSERIAL PRIMARY KEY NOT NULL, 
 	customer_id BIGINT NOT NULL,
@@ -27,7 +27,8 @@ CREATE TABLE booking
 	event_type VARCHAR(30),
 	duration NUMERIC,
 	price NUMERIC,
-	amount_paid NUMERIC,
+	total_amount_paid NUMERIC,
+	payment NUMERIC,
  	key_attendees VARCHAR(255),
 	requirements VARCHAR(255), 
 	equipment VARCHAR(255), 

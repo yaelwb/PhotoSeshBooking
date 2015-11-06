@@ -3,7 +3,6 @@ package utils;
 import com.fasterxml.jackson.databind.JsonNode;
 import enums.State;
 import models.Booking;
-import play.Logger;
 import play.libs.F;
 import play.libs.Json;
 import play.libs.ws.*;
@@ -27,7 +26,6 @@ public class GenerateBookingRequest {
         Map<String, Object> params = new HashMap<>();
         params.put("customerId", customerId);
         JsonNode json = Json.toJson(params);
-        Logger.info("createBooking with json: " + json);
 
         WSRequest request = WS.url(baseUrl + "/bookings");
         WSRequest complexRequest = request.setHeader("Content-Type", "application/json")
@@ -85,7 +83,7 @@ public class GenerateBookingRequest {
 
     public static WSResponse updateBooking(Long id, Long customerId, String status, Timestamp eventDate,
                                            String location, String eventType, BigDecimal duration,
-                                           BigDecimal price, BigDecimal amountPaid, String keyAttendees,
+                                           BigDecimal price, BigDecimal payment, String keyAttendees,
                                            String requirements, String equipment, String cameraSettings,
                                            String optimalLightingSpots, Integer numPics, Integer numSelected,
                                            Integer numProcessed, String reviewNotes,
@@ -100,9 +98,9 @@ public class GenerateBookingRequest {
         if(eventType != null) booking.setEventType(eventType);
         if(duration != null) booking.setDuration(duration);
         if(price != null) booking.setPrice(price);
-        if(amountPaid != null) booking.setAmountPaid(amountPaid);
-        if(eventDate != null) booking.setKeyAttendees(keyAttendees);
-        if(keyAttendees != null) booking.setRequirements(requirements);
+        if(payment != null) booking.setPayment(payment);
+        if(keyAttendees != null) booking.setKeyAttendees(keyAttendees);
+        if(requirements != null) booking.setRequirements(requirements);
         if(equipment != null) booking.setEquipment(equipment);
         if(cameraSettings != null) booking.setCameraSettings(cameraSettings);
         if(optimalLightingSpots != null) booking.setOptimalLightingSpots(optimalLightingSpots);
@@ -159,12 +157,12 @@ public class GenerateBookingRequest {
     }
 
     public static WSResponse updatePhotoshoot(Long id, Long customerId, BigDecimal duration,
-                                              BigDecimal price, String keyAttendees,
+                                              String keyAttendees,
                                               String requirements, String cameraSettings,
                                               String optimalLightingSpots, int numPics) {
 
         return updateBooking(id, customerId, State.PHOTOSHOOT.name(), null, null, null,
-                duration, price, null, keyAttendees, requirements, null, cameraSettings,
+                duration, null, null, keyAttendees, requirements, null, cameraSettings,
                 optimalLightingSpots, numPics, null, null, null, null, null, null);
     }
 

@@ -102,8 +102,11 @@ public class Booking {
     @Column
     private BigDecimal price;
 
-    @Column(name = "amount_paid")
-    private BigDecimal amountPaid;
+    @Column(name = "total_amount_paid")
+    private BigDecimal totalAmountPaid;
+
+    @Column(name = "payment")
+    private BigDecimal payment;
 
     @Column(name = "key_attendees")
     private String keyAttendees;
@@ -143,7 +146,7 @@ public class Booking {
                 ((eventType == null)? "" : ", event type: " + eventType) +
                 ((duration == null)? "" : ", duration: " + duration) +
                 ((price == null)? "" : ", price: " + price) +
-                ((amountPaid == null)? "" : ", amount paid: " + amountPaid) +
+                ((totalAmountPaid == null)? "" : ", total amount paid: " + totalAmountPaid) +
                 ((keyAttendees == null)? "" : ", key attendees: " + keyAttendees) +
                 ((requirements == null)? "" : ", requirements: " + requirements) +
                 ((equipment == null)? "" : ", equipment: " + equipment) +
@@ -267,11 +270,19 @@ public class Booking {
         this.reviewNotes = reviewNotes;
     }
 
-    public BigDecimal getAmountPaid() {
-        return amountPaid;
+    public BigDecimal getTotalAmountPaid() {
+        return totalAmountPaid;
     }
 
-    public void setAmountPaid(BigDecimal amountPaid) {
-        this.amountPaid = amountPaid;
+    public void setTotalAmountPaid(BigDecimal totalAmountPaid) {
+        this.totalAmountPaid = totalAmountPaid;
+    }
+
+    public BigDecimal getPayment() {
+        return payment;
+    }
+
+    public void setPayment(BigDecimal payment) {
+        this.payment = payment;
     }
 }

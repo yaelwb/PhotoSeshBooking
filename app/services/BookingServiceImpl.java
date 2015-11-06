@@ -15,11 +15,9 @@ import utilities.StatusUtil;
 
 import javax.persistence.Query;
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,7 +29,6 @@ import java.util.List;
 public class BookingServiceImpl implements BookingService {
 
     private final CustomerService customerService;
-    private MathContext mc = new MathContext(2); // 2 precision
     private SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy hh:mm:ss");
     private LinkedList<String> orderTypes = new LinkedList<>();
     {
@@ -57,7 +54,7 @@ public class BookingServiceImpl implements BookingService {
 
         Booking booking = new Booking(customerId);
         booking.setPrice(new BigDecimal("0"));
-        booking.setAmountPaid(new BigDecimal("0"));
+        booking.setTotalAmountPaid(new BigDecimal("0"));
         booking.setStatusId(StatusUtil.getStatusId(State.CREATED.name()));
 
         JPA.em().persist(booking);
@@ -243,7 +240,7 @@ public class BookingServiceImpl implements BookingService {
                 return "You must set an event type for the event to be booked.";
             if (input.getPrice() == null && orig.getPrice() == null)
                 return "You must set a price for the event to be booked.";
-            orig.setAmountPaid(new BigDecimal(0.0));
+            orig.setTotalAmountPaid(new BigDecimal(0.0));
         }
 
         if(fromState == State.POSTPONED) {
@@ -258,10 +255,13 @@ public class BookingServiceImpl implements BookingService {
         //price is set. input.price could be null if getting here from Booked state
         //just to update some extra details
         //paid amount is not modified - we have downpayment state for that
-        if (input.getPrice() != null)
+        if (input.getPrice() != null) {
+            BigDecimal diff = input.getPrice();
+            if(orig.getPrice() != null)
+                diff = input.getPrice().subtract(orig.getPrice());
             orig.setPrice(input.getPrice());
-        customerService.addToBalance(orig.getCustomerId(), input.getPrice());
-
+            customerService.addToBalance(orig.getCustomerId(), diff);
+        }
         //additional info might be updated
         updateAdditionalInfo(input, orig);
 
@@ -277,9 +277,17 @@ public class BookingServiceImpl implements BookingService {
             orig.setEventDate(input.getEventDate());
         }
 
-        BigDecimal paid = input.getAmountPaid().subtract(orig.getAmountPaid(), mc);
-        customerService.subtractFromBalance(orig.getCustomerId(), paid);
-        orig.setAmountPaid(input.getAmountPaid());
+        BigDecimal payment = input.getPayment();
+        if(payment != null && !payment.equals(new BigDecimal("0"))) {
+            orig.setPayment(payment);
+
+            if(orig.getTotalAmountPaid() != null)
+                orig.setTotalAmountPaid(orig.getTotalAmountPaid().add(payment));
+            else
+                orig.setTotalAmountPaid(payment);
+
+            customerService.subtractFromBalance(orig.getCustomerId(), payment);
+        }
 
         //some info might be updated
         updateBasicInfo(input, orig);
@@ -287,7 +295,7 @@ public class BookingServiceImpl implements BookingService {
 
         //price still might be negotiated and changed during downpayment and preparation states
         if(input.getPrice() != null && !input.getPrice().equals(orig.getPrice())) {
-            BigDecimal diff = input.getPrice().subtract(orig.getPrice(), mc);
+            BigDecimal diff = input.getPrice().subtract(orig.getPrice());
             customerService.addToBalance(orig.getCustomerId(), diff);
             orig.setPrice(input.getPrice());
         }
@@ -316,7 +324,7 @@ public class BookingServiceImpl implements BookingService {
 
         //last chance for price to be negotiated and changed
         if(input.getPrice() != null && !input.getPrice().equals(orig.getPrice())) {
-            BigDecimal diff = input.getPrice().subtract(orig.getPrice(), mc);
+            BigDecimal diff = input.getPrice().subtract(orig.getPrice());
             customerService.addToBalance(orig.getCustomerId(), diff);
             orig.setPrice(input.getPrice());
         }
@@ -329,7 +337,7 @@ public class BookingServiceImpl implements BookingService {
         //last minute additional info such as key attendees can be added
         updateAdditionalInfo(input, orig);
 
-        //camera settings might be tweaked. register new optimal lighting spots fro future reference
+        //camera settings might be tweaked. register new optimal lighting spots for future reference
         if(input.getCameraSettings() != null)
             orig.setCameraSettings(input.getCameraSettings());
         if(input.getOptimalLightingSpots() != null)
@@ -342,9 +350,19 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private String payment (Booking input, Booking orig) {
-        BigDecimal paid = input.getAmountPaid().subtract(orig.getAmountPaid(), mc);
-        customerService.subtractFromBalance(orig.getCustomerId(), paid);
-        orig.setAmountPaid(input.getAmountPaid());
+        BigDecimal payment = input.getPayment();
+        if(payment != null && !payment.equals(new BigDecimal("0"))) {
+            orig.setPayment(payment);
+
+            if(orig.getTotalAmountPaid() != null)
+                orig.setTotalAmountPaid(orig.getTotalAmountPaid().add(payment));
+            else
+                orig.setTotalAmountPaid(payment);
+
+            customerService.subtractFromBalance(orig.getCustomerId(), payment);
+        }
+
+
 
         orig.setStatus(State.PAYMENT.toString());
         return null;
@@ -356,11 +374,18 @@ public class BookingServiceImpl implements BookingService {
             case PAYMENT:
                 //override payment - allow customer to pay a part of the balance later on
                 String override = RequestUtil.getQueryParam("overridePayment");
-                if(!input.getAmountPaid().equals(input.getPrice())) {
+                BigDecimal paid = input.getTotalAmountPaid();
+                if(paid == null)
+                    paid = orig.getTotalAmountPaid();
+                BigDecimal price = orig.getPrice();
+
+                if(paid == null || price == null || !paid.equals(price)) {
                     if (override == null || override.equals("false")) {
                         return "Amount must be paid in full before selections are made. Override option is available";
                     }
                 }
+                if(input.getNumSelected() != 0)
+                    orig.setNumSelected(input.getNumSelected());
                 orig.setNumProcessed(0);
                 break;
             case SELECTIONS:
@@ -379,18 +404,11 @@ public class BookingServiceImpl implements BookingService {
 
     private String editing (Booking input, Booking orig) {
         State fromState = StatusUtil.getState(orig.getStatus());
-        switch(fromState) {
-            case SELECTIONS:
-                orig.setNumProcessed(0);
-                break;
-            case EDITING:
-                orig.setNumProcessed(input.getNumProcessed());
-                break;
-            case REVIEW:
-                orig.setNumSelected(input.getNumSelected());
-                orig.setNumProcessed(input.getNumProcessed());
-                orig.setReviewNotes(input.getReviewNotes());
-                break;
+        orig.setNumProcessed(input.getNumProcessed());
+
+        if(fromState.equals(State.REVIEW)) {
+            orig.setNumSelected(input.getNumSelected());
+            orig.setReviewNotes(input.getReviewNotes());
         }
 
         orig.setStatus(State.EDITING.toString());
@@ -428,9 +446,10 @@ public class BookingServiceImpl implements BookingService {
         //remove the amount remained to pay from the balance - if not null
         BigDecimal diff = new BigDecimal("0");
         if(orig.getPrice() != null)
-            diff.add(orig.getPrice(), mc);
-        if(orig.getAmountPaid() != null)
-            diff.add(orig.getAmountPaid(), mc);
+            diff = diff.add(orig.getPrice());
+        if(orig.getTotalAmountPaid() != null)
+            diff = diff.subtract(orig.getTotalAmountPaid());
+
         customerService.subtractFromBalance(orig.getCustomerId(), diff);
         orig.setStatus(State.CANCELED.toString());
         return null;

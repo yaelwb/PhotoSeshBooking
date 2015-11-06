@@ -11,16 +11,15 @@ RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
 <br>
 Main functionality:
 <br>
-[app/services/BookingServiceImpl.java](app/services/BookingServiceImpl.java)
+[Bookings: app/services/BookingServiceImpl.java](app/services/BookingServiceImpl.java)
 <br>
-[app/services/CustomerServiceImpl.java](app/services/CustomerServiceImpl.java)
+[Customers: app/services/CustomerServiceImpl.java](app/services/CustomerServiceImpl.java)
 <br>
-[app/utilities/StatusUtil.java](State machine implementation: app/utilities/StatusUtil.java)
+[State machine implementation: app/utilities/StatusUtil.java](app/utilities/StatusUtil.java)
 <br>
-Test:
+[Customer Tests: test/CustomerControllerTest.java](test/CustomerControllerTest.java)
 <br>
-[test/CustomerControllerTest.java](test/CustomerControllerTest.java)
-[test/BookingControllerTest.java](test/BookingControllerTest.java)
+[Booking Tests: test/BookingControllerTest.java](test/BookingControllerTest.java)
 <br>
 <ul>
      <li><b>POST    /customers </b>Create a customer</li>

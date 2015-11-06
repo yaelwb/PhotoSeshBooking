@@ -361,9 +361,7 @@ public class BookingServiceImpl implements BookingService {
 
             customerService.subtractFromBalance(orig.getCustomerId(), payment);
         }
-
-
-
+        
         orig.setStatus(State.PAYMENT.toString());
         return null;
     }

@@ -230,8 +230,8 @@ public class BookingControllerTest extends WithServer {
 
     @Test
     @play.db.jpa.Transactional
-    public void updateBookingSuccessfully() throws Exception {
-        Logger.info("BookingControllerTest.updateBookingSuccessfully");
+    public void testUpdateUpToDownpayment() throws Exception {
+        Logger.info("BookingControllerTest.updateUpToDownpayment");
         Long customerId = createCustomer1();
         assertCustomerBalance(customerId, "55.79");
 
@@ -245,7 +245,6 @@ public class BookingControllerTest extends WithServer {
         assertEquals(400, response.getStatus());
         response = GenerateBookingRequest.updatePhotoshoot(id, customerId, null, null, null, null, null, 0);
         assertEquals(400, response.getStatus());
-
 
         //update to booked
         Timestamp eventDate = new Timestamp(dateFormat.parse("02-12-2015 10:35:42").getTime());
@@ -274,18 +273,26 @@ public class BookingControllerTest extends WithServer {
                 null, null, new BigDecimal("70"), null, null);
         assertEquals(200, response.getStatus());
         assertCustomerBalance(customerId, "435.79");
+    }
+
+    @Test
+    @play.db.jpa.Transactional
+    public void testUpdatePrepToPayment() throws Exception {
+        Logger.info("BookingControllerTest.updatePrepToPayment");
+        Long customerId = createCustomer1();
+
+        //Quickly reach to downpayment state
+        Long id = createToDownpayment(customerId);
 
         //update to preparation
-        response = GenerateBookingRequest.updatePreparation(id, customerId,
+        WSResponse response = GenerateBookingRequest.updatePreparation(id, customerId,
                 new BigDecimal("6"), null, "Svetlana, Megan", null,
-                "Canon EF 28-135mm lens",
-                "fix saturation and white balance accordingly",
+                "Canon EF 28-135mm lens", "fix saturation and white balance accordingly",
                 "about 30 feet to the right from the podium");
         assertEquals(200, response.getStatus());
         JsonNode node = response.asJson();
         assertEquals("Svetlana, Megan", node.findValue("keyAttendees").asText());
         assertEquals(new BigDecimal("500.0"), node.findValue("price").decimalValue());
-
 
         response = GenerateBookingRequest.updatePreparation(id, customerId,
                 null, new BigDecimal("600"), null, null,
@@ -313,8 +320,8 @@ public class BookingControllerTest extends WithServer {
         assertEquals(400, response.getStatus());
 
         response = GenerateBookingRequest.updatePhotoshoot(id, customerId, null, null,
-                "Tango dress for retail photoshoot - make sure to capture each dress from front, back, side, and during movement. Coordinate with Renee",
-                "ISO=100, f stop=2.0, WB: temperature 7000, tint +1,", null, 900);
+                "Tango dress for retail photoshoot - make sure to capture each dress from front, back, side, and during movement. " +
+                        "Coordinate with Renee", "ISO=100, f stop=2.0, WB: temperature 7000, tint +1,", null, 900);
         assertEquals(200, response.getStatus());
         node = response.asJson();
         assertEquals(900, node.findValue("numPics").asInt());
@@ -327,14 +334,24 @@ public class BookingControllerTest extends WithServer {
         response = GenerateBookingRequest.updatePayment(id, customerId, new BigDecimal("200"));
         assertEquals(200, response.getStatus());
         assertCustomerBalance(customerId, "135.79");
+    }
+
+    @Test
+    @play.db.jpa.Transactional
+    public void testUpdateToEdits() throws Exception {
+        Logger.info("BookingControllerTest.updatePostPayment");
+        Long customerId = createCustomer1();
+
+        //Quickly reach to payment state
+        Long id = createToPayment(customerId);
 
         //update to selection - won't move from payment state without overriding the payment, as it is not fully paid
-        response = GenerateBookingRequest.updateSelections(id, customerId, 30, 0, null, null);
+        WSResponse response = GenerateBookingRequest.updateSelections(id, customerId, 30, 0, null, null);
         assertEquals(400, response.getStatus());
 
         response = GenerateBookingRequest.updateSelections(id, customerId, 30, 0, null, "true");
         assertEquals(200, response.getStatus());
-        node = response.asJson();
+        JsonNode node = response.asJson();
         assertEquals(State.SELECTIONS.toString(), node.findValue("status").asText());
         assertEquals(30, node.findValue("numSelected").asInt());
 
@@ -360,10 +377,26 @@ public class BookingControllerTest extends WithServer {
         response = GenerateBookingRequest.updateReview(id, customerId, 587, 28, null);
         assertEquals(400, response.getStatus());
 
+        //try cancel and postpone after the photoshoot already took place
+        response = GenerateBookingRequest.updatePostpone(id, customerId, null);
+        assertEquals(400, response.getStatus());
+        response = GenerateBookingRequest.updateCancel(id, customerId, new BigDecimal("25"));
+        assertEquals(400, response.getStatus());
+    }
+
+    @Test
+    @play.db.jpa.Transactional
+    public void testUpdateToReview() throws Exception {
+        Logger.info("BookingControllerTest.updatePostPayment");
+        Long customerId = createCustomer1();
+
+        //Quickly reach to editing state
+        Long id = createToEdits(customerId);
+
         //override in order to get customer's feedback before editing almost 600 images
-        response = GenerateBookingRequest.updateReview(id, customerId, 587, 28, "true");
+        WSResponse response = GenerateBookingRequest.updateReview(id, customerId, 587, 28, "true");
         assertEquals(200, response.getStatus());
-        node = response.asJson();
+        JsonNode node = response.asJson();
         assertEquals(State.REVIEW.toString(), node.findValue("status").asText());
         assertEquals(28, node.findValue("numProcessed").asInt());
 
@@ -398,14 +431,64 @@ public class BookingControllerTest extends WithServer {
         response = GenerateBookingRequest.updateComplete(id, customerId);
         assertEquals(200, response.getStatus());
         assertEquals(State.COMPLETE.toString(), response.asJson().findValue("status").asText());
-
-        //try cancel and postpone after the photoshoot.
-        response = GenerateBookingRequest.updatePostpone(id, customerId, null);
-        assertEquals(400, response.getStatus());
-        response = GenerateBookingRequest.updateCancel(id, customerId, new BigDecimal("25"));
-        assertEquals(400, response.getStatus());
     }
 
+    private Long createToDownpayment(Long customerId) throws ParseException {
+        //create booking
+        WSResponse response = GenerateBookingRequest.createBooking(customerId);
+        assertEquals(200, response.getStatus());
+        Long id = response.asJson().findValue("id").asLong();
+
+        //update to booked
+        Timestamp eventDate = new Timestamp(dateFormat.parse("02-12-2015 10:35:42").getTime());
+        response = GenerateBookingRequest.updateBooked(id, customerId, eventDate,
+                "Palace of the Fine Arts", "Modeling", new BigDecimal("3"), new BigDecimal("500"),
+                "Svetlana, Denise, Bei, Fernanda", "Tango dress for retail photoshoot - " +
+                        "make sure to capture each dress from front, back, side, and during movement");
+        assertEquals(200, response.getStatus());
+
+        //update to downpayment
+        response = GenerateBookingRequest.updateDownpayment(id, customerId, null, null, null,
+                null, null, new BigDecimal("120"), null, null);
+        assertEquals(200, response.getStatus());
+        return id;
+    }
+
+    private Long createToPayment(Long customerId)  throws ParseException{
+        //Quickly reach to downpayment state
+        Long id = createToDownpayment(customerId);
+
+        //update to preparation
+        WSResponse response = GenerateBookingRequest.updatePreparation(id, customerId,
+                new BigDecimal("6"), new BigDecimal("600"), "Svetlana, Megan", null,
+                "Canon EF 28-135mm lens, tripod, flash, remote, strobe",
+                "fix saturation and white balance accordingly", "about 30 feet to the right from the podium");
+        assertEquals(200, response.getStatus());
+
+        //photoshoot
+        response = GenerateBookingRequest.updatePhotoshoot(id, customerId, null, null,
+                "Tango dress for retail photoshoot - make sure to capture each dress from front, back, side, and during movement. Coordinate with Renee",
+                "ISO=100, f stop=2.0, WB: temperature 7000, tint +1,", null, 900);
+        assertEquals(200, response.getStatus());
+
+        //update to payment
+        response = GenerateBookingRequest.updatePayment(id, customerId, new BigDecimal("400"));
+        assertEquals(200, response.getStatus());
+        return id;
+    }
+
+    private Long createToEdits(Long customerId)  throws ParseException{
+        //Quickly reach to payment state
+        Long id = createToPayment(customerId);
+
+        WSResponse response = GenerateBookingRequest.updateSelections(id, customerId, 587, 0, null, "true");
+        assertEquals(200, response.getStatus());
+
+        //edit
+        response = GenerateBookingRequest.updateEditing(id, customerId, 587, 28, null);
+        assertEquals(200, response.getStatus());
+        return id;
+    }
 
     @Test
     @play.db.jpa.Transactional

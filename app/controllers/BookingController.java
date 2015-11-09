@@ -15,7 +15,9 @@ import utilities.ActionAuthenticator;
 import utilities.Predicates;
 import utilities.RequestUtil;
 import utilities.StatusUtil;
+import views.html.bookings;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -166,5 +168,15 @@ public class BookingController extends Controller {
         if (count == 0)
             return ok("No bookings currently in the system.");
         return ok("Deleted all " + count + " bookings");
+    }
+
+    @Transactional
+//    @Security.Authenticated(ActionAuthenticator.class)
+    public Result dashGetAll() {
+        List<Booking> l = bookingService.getAll();
+        if (l == null) {
+            return ok("No such bookings currently in the system.");
+        }
+        return ok(bookings.render(l));
     }
 }

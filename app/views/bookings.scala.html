@@ -1,0 +1,130 @@
+@(bookings: List[models.Booking])
+
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>PhotoSeshBooking - Bookings Dashboard</title>
+      <!-- Bootstrap core CSS -->
+      <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/bootstrap.min.css")">
+      <!-- Custom styles for this template -->
+      <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("stylesheets/dashboard.css")">
+
+      <link rel="shortcut icon" type="image/jpg" href="@routes.Assets.versioned("images/pipeline.jpg")">
+
+
+      <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">PhotoSeshBooking - Bookings Dashboard</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="customers">Customers Dashboard</a></li>
+            <li><a href="mailto:yaelwb@@gmail.com">Contact</a></li>
+            <li><a href="../">Overview</a></li>
+          </ul>
+          <!--<form class="navbar-form navbar-right">-->
+            <!--<input type="text" class="form-control" placeholder="Search...">-->
+          <!--</form>-->
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-3 col-md-2 sidebar">
+          <ul class="nav nav-sidebar">
+            <li><a href="customers">View All Customers</a></li>
+            <li><a href="#">Find customer by name or id</a></li>
+            <li><a href="createCustomer">Create a customer</a></li>
+            <li><a href="#">Update an existing customer</a></li>
+          </ul>
+          <ul class="nav nav-sidebar">
+            <li><a href="bookings">View All Bookings</a></li>
+            <li><a href="#">Find booking by id</a></li>
+            <li><a href="#">Create a booking</a></li>
+            <li><a href="#">Update an existing booking</a></li>
+          </ul>
+        </div>
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+          <h1 class="page-header">Photo Session Booking</h1>
+
+          <h2 class="sub-header">All Bookings</h2>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Customer ID</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Location</th>
+                  <th>Type</th>
+                  <th>Duration</th>
+                  <th>Price</th>
+                  <th>Paid</th>
+                  <th>Attendees</th>
+                  <th>Requirements</th>
+                  <th>Pictures</th>
+                  <th>Selected</th>
+                  <th>Processed</th>
+                </tr>
+              </thead>
+              <tbody>
+              @for(b <- bookings) {
+                <tr>
+                  <td>@b.getId</td>
+                  <td>@b.getCustomerId</td>
+                  <td>@b.getStatus</td>
+                  <td>@b.getEventDate</td>
+                  <td>@b.getLocation</td>
+                  <td>@b.getEventType</td>
+                  <td>@b.getDuration</td>
+                  <td>@b.getPrice</td>
+                  <td>@b.getTotalAmountPaid</td>
+                  <td>@b.getKeyAttendees</td>
+                  <td>@b.getRequirements</td>
+                  <td>@b.getNumPics</td>
+                  <td>@b.getNumSelected</td>
+                  <td>@b.getNumProcessed</td>
+                </tr>
+              }
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="../../public/javascript/bootstrap.min.js"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="../../public/javascript/ie10-viewport-bug-workaround.js"></script>
+  </body>
+</html>

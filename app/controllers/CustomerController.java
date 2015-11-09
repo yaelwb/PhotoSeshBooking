@@ -15,6 +15,8 @@ import services.CustomerService;
 import utilities.ActionAuthenticator;
 import utilities.Parse;
 import utilities.RequestUtil;
+import views.html.createCustomer;
+import views.html.customers;
 
 /**
  * Created by yael on 9/28/15.
@@ -151,5 +153,23 @@ public class CustomerController extends Controller {
         if (count == 0)
             return ok("No customers currently in the system.");
         return ok("Deleted all " + count + " customers");
+    }
+
+
+    @Transactional
+//    @Security.Authenticated(ActionAuthenticator.class)
+    public Result dashGetAll() {
+        List<Customer> l = customerService.getAll();
+
+        if (l == null) {
+            return ok("No customers currently in the system.");
+        }
+        return ok(customers.render(l));
+    }
+
+    @Transactional
+//    @Security.Authenticated(ActionAuthenticator.class)
+    public Result dashCreateCustomer() {
+        return ok(createCustomer.render());
     }
 }

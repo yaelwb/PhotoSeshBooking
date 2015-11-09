@@ -21,5 +21,11 @@ PUT     /bookings                   controllers.BookingController.update()
 DELETE  /bookings                   controllers.BookingController.delete()
 DELETE  /bookings/DeleteAll         controllers.BookingController.deleteAll()
 
+# Dashboard
+GET     /dash/customers             controllers.CustomerController.dashGetAll()
+GET     /dash/createCustomer        controllers.CustomerController.dashCreateCustomer()
+
+GET     /dash/bookings              controllers.BookingController.dashGetAll()
+
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

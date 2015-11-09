@@ -46,7 +46,7 @@ public class Customer {
         this.lastName = lastName;
         this.email = email;
         this.phone = phone;
-        this.payMethod = payMethod != null? payMethod : PayMethod.CASH.toString();
+        this.payMethod = payMethod != null? payMethod.toUpperCase() : PayMethod.CASH.toString();
         this.balance = balance != null? balance : new BigDecimal("0.0", new MathContext(2));
     }
 

@@ -2,10 +2,6 @@
 PhotoSeshBooking – A service for the busy photographer, to keep track of customers and bookings. 
 RESTful Api Server, Java 8, Play Framework, PostgreSql, Hibernate.
 <br>
-<i>
-[Back End Engineer available for hire @ San Francisco Bay Area](https://www.linkedin.com/in/yaelwb) 
-</i>
-<br>
 <br>
 [Booking flow chart diagram](Photoshoot - flow chart.png)
 <br>
